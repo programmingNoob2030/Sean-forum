@@ -1,0 +1,59 @@
+# 1.核心基础设施(连接层)
+
+file:
+  upload-path: YOUR_UPLOAD_PATH
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+  mail:
+    # 163 邮箱 SMTP 服务器地址
+    host: smtp.163.com
+    # 必须使用 465 端口，这是 SSL 加密端口，也是目前最稳定的方案
+    port: 465
+    # 你的 163 邮箱完整地址
+    username: YOUR_EMAIL_ADDRESS
+    # 重点：此处为 16 位“客户端授权密码”，在 163 设置中获取，非登录密码
+    password: YOUR_EMAIL_CODE
+    default-encoding: UTF-8
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          auth: true
+          # 显式开启 SSL 加密，163 的 465 端口强制要求 SSL
+          ssl:
+            enable: true
+          # 在某些 Spring Boot 版本中，必须配置以下 SocketFactory 才能连接成功
+          socketFactory:
+            class: javax.net.ssl.SSLSocketFactory
+            port: 465
+  session:
+    store-type: redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  jackson:
+    # 格式化日期格式，防止它变成一串奇怪的数字
+    date-format: yyyy-MM-dd HH:mm:ss
+    # 强制 Jackson 使用东八区（上海/北京时间）
+    time-zone: GMT+8
+  datasource:
+    url: jdbc:mysql://localhost:3306/forum_db?serverTimezone=Asia/Shanghai # 如果数据库不在本地，请将 localhost 改为实际 IP
+    username: YOUR_MYSQL_USERNAME
+    password: YOUR_MYSQL_PASSWORD
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      # 强制连接池只准建 2 个连接，多了不准握手
+      maximum-pool-size: 2
+
+
+mybatis-plus:
+  # 显式指定实体扫描包，避免 MyBatis-Plus 把无关类当成 Entity
+  type-aliases-package: sim.forum.entity
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

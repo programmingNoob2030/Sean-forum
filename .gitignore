@@ -2,7 +2,7 @@
 **/target/
 **/*.class
 **/*.iml
-**/application.yml.local  # 建议把带密码的配置改个后缀，防止误传
+!**/application.yml.local  # 建议把带密码的配置改个后缀，防止误传
 **/.idea/
 **/bin/
 **/out/
