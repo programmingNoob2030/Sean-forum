@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sim.forum.mapper.UserMapper">
+    <select id="loginResult" parameterType="sim.forum.dto.user.LoginDTO" resultType="sim.forum.vo.user.LoginVO">
+        SELECT
+            u.name,
+            u.avatar,
+            u.email,
+            u.register_time,
+            u.last_login_time,
+            u.post_count
+        FROM users u
+        WHERE u.name = #{name}
+    </select>
+</mapper>

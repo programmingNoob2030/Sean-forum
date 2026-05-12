@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sim.forum.mapper.BoardMapper">
+    <select id="getBoardDetail" resultType="sim.forum.vo.board.BoardVO">
+        SELECT
+        b.*,
+        u.id AS creator_id,
+        u.name AS creator_name,
+        u.avatar AS creator_avatar,
+        bm.role AS current_user_role
+        FROM boards b
+        LEFT JOIN users u ON b.creator = u.id
+        LEFT JOIN board_members bm ON b.id = bm.board_id AND bm.member_id = #{userId}
+        WHERE b.id = #{id}
+    </select>
+
+    <select id="searchBoardsByKeyword" resultType="sim.forum.vo.board.BriefBoardVO">
+        SELECT b.id, b.name, b.cover
+        FROM boards b
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND b.name LIKE concat('%', #{keyword}, '%')
+            </if>
+        </where>
+    </select>
+</mapper>

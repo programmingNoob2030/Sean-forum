@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="sim.forum.mapper.PostMapper">
+    <select id="getPostsWithRatingCondition">
+        SELECT p.*, u.avatar AS creator_avatar,u.name AS creator_name, r.type AS post_rating_type,
+               b.name AS board_name, b.cover AS board_cover
+        FROM posts p
+        LEFT JOIN users u
+        ON p.creator = u.id
+        LEFT JOIN ratings r
+        ON p.id = r.target_id
+        AND r.target = 'POST'
+        AND r.creator = #{userId}
+        LEFT JOIN boards b
+        ON p.board_id = b.id
+    </select>
+
+    <select id="getPostWithRatingConditionById">
+        SELECT p.*, u.avatar AS creator_avatar, u.name AS creator_name, r.type AS post_rating_type
+        FROM posts p
+        LEFT JOIN users u
+        ON p.creator = u.id
+        LEFT JOIN ratings r
+        ON p.id = r.target_id
+        AND r.target = 'POST'
+        AND r.creator = #{userId}
+        WHERE p.id = #{postId}
+    </select>
+
+</mapper>

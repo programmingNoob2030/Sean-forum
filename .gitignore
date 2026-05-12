@@ -1,0 +1,22 @@
+# --- 后端 (Spring Boot) ---
+**/target/
+**/*.class
+**/*.iml
+**/application.yml.local  # 建议把带密码的配置改个后缀，防止误传
+**/.idea/
+**/bin/
+**/out/
+**/application.yaml
+
+# --- 前端 (Vue 3) ---
+**/node_modules/
+**/dist/
+**/.env.local
+**/.vscode/
+**/.history/
+**/.cache/
+**/dist-ssr/
+**/*.local
+# --- 系统文件 ---
+.DS_Store
+Thumbs.db

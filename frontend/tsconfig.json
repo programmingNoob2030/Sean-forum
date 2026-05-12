@@ -1,0 +1,14 @@
+{
+
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "exclude": ["src/**/__tests__/*"],
+  "compilerOptions": {
+    "composite": true,
+    "paths": {
+      "@/*": ["./src/*"] // 👈 告诉 TS：@ 就是 src 文件夹
+    }
+  }
+
+
+}
