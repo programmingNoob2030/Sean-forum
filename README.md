@@ -1,4 +1,4 @@
-# Forum System Backend (Sim-Forum)
+# Forum System Backend (Sean-Forum)
 
 ## 📖 项目简介
 
