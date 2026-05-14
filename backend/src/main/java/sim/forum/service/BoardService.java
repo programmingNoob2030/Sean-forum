@@ -21,4 +21,6 @@ public interface BoardService {
     List<BriefBoardVO> searchBoardsByKeyword(String keyword);
 
     List<SquareBoardVO> getSquareBoards(Long userId);
+
+    List<BriefBoardVO> getRecentBoards(List<Long> ids, Long userId);
 }

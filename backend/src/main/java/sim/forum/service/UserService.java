@@ -24,5 +24,7 @@ public interface UserService {
 
     LoginVO updateUserInfo(@Valid UpdateUserInfoDTO dto, Long userId);
 
-    User seleUserById(Long userId);
+    User selectUserById(Long userId);
+
+
 }

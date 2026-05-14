@@ -23,4 +23,27 @@
             </if>
         </where>
     </select>
+
+    <select id="getRecentBoards" resultType="sim.forum.vo.board.BriefBoardVO">
+        SELECT
+        b.id,
+        b.name,
+        b.cover,
+        bm.role
+        FROM boards b
+        <!-- 这里的 userId 需要从上下文获取，如果 Mapper 接口没传，建议接口改成两个参数 -->
+        LEFT JOIN board_members bm ON b.id = bm.board_id AND bm.member_id = #{userId}
+        WHERE b.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        <!-- 核心：按照传入 ID 的顺序排序，保证“最近浏览”在最前面 -->
+        <if test="ids != null and ids.size() > 0">
+            ORDER BY FIELD(b.id,
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+    </select>
 </mapper>

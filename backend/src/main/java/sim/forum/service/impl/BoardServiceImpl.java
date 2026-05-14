@@ -8,8 +8,10 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import sim.forum.dto.board.BoardDTO;
+import sim.forum.dto.browserecord.CreateBrowseRecordDTO;
 import sim.forum.entity.Board;
 import sim.forum.entity.BoardMember;
+import sim.forum.entity.BrowseRecord;
 import sim.forum.entity.User;
 import sim.forum.event.post.PostCreateEvent;
 import sim.forum.exception.BusinessException;
@@ -37,6 +39,8 @@ public class BoardServiceImpl implements BoardService {
     private BoardMemberService boardMemberService;
     @Autowired
     private CountService countService;
+    @Autowired
+    private BrowseRecordService browseRecordService;
     @Override
     public String uploadCover(MultipartFile file) {
         String relativePath = fileUploadService.upload(file, "board/cover");
@@ -71,7 +75,7 @@ public class BoardServiceImpl implements BoardService {
     }
     @Override
     public List<BriefBoardVO> getBoardsByMemberId(Long userId) {
-        User user = userService.seleUserById(userId);
+        User user = userService.selectUserById(userId);
         if (user == null) throw new BusinessException("此用户不存在!");
         List<BoardMember> boards = boardMemberService.getBoardsByMemberId(userId);
         List<BriefBoardVO> briefBoards = new ArrayList<>();
@@ -93,6 +97,12 @@ public class BoardServiceImpl implements BoardService {
             throw new BusinessException("目标社区不存在!");
         }
         if (boardVO.getCurrentUserRole() == null) boardVO.setCurrentUserRole("GUEST");
+        CreateBrowseRecordDTO dto = new CreateBrowseRecordDTO();
+        dto.setTarget(BrowseRecord.BrowseTarget.BOARD);
+        dto.setTargetId(id);
+        if(userId != null){
+            browseRecordService.saveRecordAsync(dto, userId);
+        }
         return boardVO;
     }
 
@@ -101,6 +111,12 @@ public class BoardServiceImpl implements BoardService {
         List<BriefBoardVO> list = boardMapper.searchBoardsByKeyword(keyword);
         if (list == null) return new ArrayList<>();
         return list;
+    }
+
+    @Override
+    public List<BriefBoardVO> getRecentBoards(List<Long> ids, Long userId) {
+        if (userId == null) throw new BusinessException("此用户信息有误,无法查询!");
+        return boardMapper.getRecentBoards(ids, userId);
     }
 
     @Override

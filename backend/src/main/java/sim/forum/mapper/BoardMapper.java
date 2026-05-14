@@ -14,4 +14,5 @@ public interface BoardMapper extends BaseMapper<Board> {
 
     List<BriefBoardVO> searchBoardsByKeyword(String keyword);
 
+    List<BriefBoardVO> getRecentBoards(List<Long> ids, Long userId);
 }
