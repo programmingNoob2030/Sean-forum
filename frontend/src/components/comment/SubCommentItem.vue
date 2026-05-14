@@ -1,7 +1,7 @@
 <template>
   <div class="sub-comment-item">
     <div class="sub-left-sidebar">
-      <el-avatar :size="32" :src="defaultAvatarUrl" />
+      <el-avatar :size="32" :src="baseUrl + comment.creatorAvatar" />
     </div>
     <div class="sub-right-sidebar">
     <div class="sub-header">
@@ -88,6 +88,7 @@ import { ensureLogin } from '@/utils/auth'
 import { apiCreateComment } from '@/api/comment'
 import { useCommentStore } from '@/models/comment/commentStore'
 import { ElMessage } from 'element-plus';
+const baseUrl = import.meta.env.VITE_RESOURCE_URL
 const props = defineProps<{
   comment: CommentVO // 或者使用你定义的 CommentVO 接口
 }>()

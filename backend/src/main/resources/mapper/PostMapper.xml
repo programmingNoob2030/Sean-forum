@@ -26,5 +26,37 @@
         AND r.creator = #{userId}
         WHERE p.id = #{postId}
     </select>
+    <select id="getRecentPosts" resultType="sim.forum.vo.post.RecentPostVO">
+        SELECT
+        p.id, p.title, p.content, p.like_count AS likeCount,
+        p.comment_count AS commentCount, p.create_time AS createTime,
+        b.name AS boardName, b.cover AS boardCover
+        FROM posts p
+        LEFT JOIN boards b ON p.board_id = b.id
+        <where>
+            <choose>
+                <when test="ids != null and ids.size() > 0">
+                    AND p.id IN
+                    <foreach collection="ids" item="id" open="(" separator="," close=")">
+                        #{id}
+                    </foreach>
+                </when>
+                <otherwise>
+                    <!-- 这里的 otherwise 就相当于 else -->
+                    <!-- 如果 ids 为空，添加一个永远为假的条件，防止全表扫描 -->
+                    AND 1 = 0
+                </otherwise>
+            </choose>
+            AND p.is_deleted = 0
+        </where>
+
+        <if test="ids != null and ids.size() > 0">
+            ORDER BY FIELD(p.id,
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+            )
+        </if>
+    </select>
 
 </mapper>

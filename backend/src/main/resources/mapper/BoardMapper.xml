@@ -31,13 +31,23 @@
         b.cover,
         bm.role
         FROM boards b
-        <!-- 这里的 userId 需要从上下文获取，如果 Mapper 接口没传，建议接口改成两个参数 -->
         LEFT JOIN board_members bm ON b.id = bm.board_id AND bm.member_id = #{userId}
-        WHERE b.id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        <!-- 核心：按照传入 ID 的顺序排序，保证“最近浏览”在最前面 -->
+        <where>
+            <!-- 1. 这里的 if 保护是必须要加的 -->
+            <if test="ids != null and ids.size() > 0">
+                AND b.id IN
+                <foreach collection="ids" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+
+            <!-- 2. 兜底逻辑：如果 ids 为空，确保 SQL 不会查出数据，也不会报错 -->
+            <if test="ids == null or ids.size() == 0">
+                AND 1 = 0
+            </if>
+        </where>
+
+        <!-- 3. 排序保护 -->
         <if test="ids != null and ids.size() > 0">
             ORDER BY FIELD(b.id,
             <foreach collection="ids" item="id" separator=",">

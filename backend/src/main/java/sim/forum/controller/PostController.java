@@ -6,20 +6,26 @@ import org.springframework.web.bind.annotation.*;
 import sim.forum.annotation.OptionalAuth;
 import sim.forum.context.UserContext;
 import sim.forum.dto.PageRequestDTO;
-import sim.forum.mapper.PostMapper;
+import sim.forum.entity.BrowseRecord;
 import sim.forum.result.PageResult;
 import sim.forum.result.Result;
 import sim.forum.dto.post.CreatePostDTO;
 import sim.forum.dto.post.DeletePostDTO;
 import sim.forum.dto.post.RestorePostDTO;
 import sim.forum.entity.Post;
+import sim.forum.service.BrowseRecordService;
 import sim.forum.service.PostService;
 import sim.forum.vo.post.PostVO;
+import sim.forum.vo.post.RecentPostVO;
+
+import java.util.List;
 
 @RestController
 public class PostController {
     @Autowired
     private PostService postService;
+    @Autowired
+    private BrowseRecordService browseRecordService;
 
     @PostMapping("/posts")
     public Result<Post> createPost(@Valid @RequestBody CreatePostDTO dto){
@@ -37,6 +43,19 @@ public class PostController {
     public Result<Post> restorePost(@Valid @RequestBody RestorePostDTO dto){
         Post post = postService.restorePost(dto);
         return Result.success(post);
+    }
+    @GetMapping("/posts/history")
+    public Result<List<RecentPostVO>> getRecentPosts(){
+        Long userId = UserContext.getUserId();
+        List<Long> ids = browseRecordService.getIdsFromRedis(BrowseRecord.BrowseTarget.POST, userId);
+        List<RecentPostVO> list = postService.getRecentPosts(ids, userId);
+        return Result.success(list);
+    }
+    @DeleteMapping("/posts/history")
+    public Result<Void> deleteRecentPosts(){
+        Long userId = UserContext.getUserId();
+        browseRecordService.deletePostRecordAsync(userId);
+        return Result.success();
     }
     @GetMapping("/posts")
     @OptionalAuth

@@ -1,15 +1,25 @@
 <template>
   <div class="recent-post-item" @click="$emit('click-detail', post.id)">
     <div class="item-main">
+      <!-- 头部信息：板块图标 + 名称 + 时间 -->
       <div class="item-header">
-        <el-avatar :size="16" :src="post.communityIcon" icon="User" />
-        <span class="community-name">r/{{ post.communityName || 'backend_dev' }}</span>
+        <el-avatar 
+          :size="16" 
+          :src="baseUrl + post.boardCover" 
+          class="board-icon"
+        >
+          <!-- 如果没加载出图片，显示一个默认字符 -->
+          {{ post.boardName?.charAt(0).toUpperCase() }}
+        </el-avatar>
+        <span class="community-name">r/{{ post.boardName || 'backend_dev' }}</span>
         <span class="dot">•</span>
         <span class="post-time">{{ displayTime }}</span>
       </div>
 
+      <!-- 标题：限制显示行数 -->
       <h4 class="item-title">{{ post.title }}</h4>
 
+      <!-- 底部数据：点赞与评论 -->
       <div class="item-footer">
         <span class="footer-data">{{ post.likeCount || 0 }} 评分</span>
         <span class="dot">•</span>
@@ -17,8 +27,13 @@
       </div>
     </div>
 
-    <div class="item-media" v-if="post.thumbnail">
-      <el-image :src="post.thumbnail" fit="cover" />
+    <!-- 右侧缩略图：参考图2的样式 -->
+    <div class="item-media" v-if="post.boardCover">
+      <el-image 
+        :src="baseUrl + post.boardCover" 
+        fit="cover"
+        class="media-img"
+      />
     </div>
     <div class="item-media placeholder" v-else>
       <el-icon><Picture /></el-icon>
@@ -30,9 +45,10 @@
 import { computed } from 'vue';
 import { Picture } from '@element-plus/icons-vue';
 import { formatPostTime } from '@/utils/timeFormat';
-import type { PostVO } from '@/models/post/postTypes';
+import type { RecentPostVO } from '@/models/post/postTypes';
 
-const props = defineProps<{ post: PostVO }>();
+const props = defineProps<{ post: RecentPostVO }>();
+const baseUrl = import.meta.env.VITE_RESOURCE_URL;
 defineEmits(['click-detail']);
 
 const displayTime = computed(() => formatPostTime(props.post.createTime));
@@ -41,11 +57,23 @@ const displayTime = computed(() => formatPostTime(props.post.createTime));
 <style scoped>
 .recent-post-item {
   display: flex;
-  padding: 12px;
-  gap: 12px;
-  border-bottom: 1px solid #f0f0f0;
+  /* 增加左右 padding 以补偿父容器去掉的 padding，确保文字不贴边 */
+  padding: 16px 14px; 
+  gap: 16px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
+  align-items: flex-start;
+  
+  /* 核心修改：加深分割线颜色，确保在白色背景上清晰可见 */
+  border-bottom: 1px solid #edeff1; 
+  
+  /* 悬停时稍微圆角化，看起来更精致 */
+  background-color: #ffffff;
+}
+
+/* 最后一项去掉边框 */
+.recent-post-item:last-child {
+  border-bottom: none;
 }
 
 .recent-post-item:hover {
@@ -54,21 +82,25 @@ const displayTime = computed(() => formatPostTime(props.post.createTime));
 
 .item-main {
   flex: 1;
-  min-width: 0; /* 防止标题过长撑破布局 */
+  min-width: 0;
 }
 
 .item-header {
   display: flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 12px;
   color: #787c7e;
   margin-bottom: 4px;
+}
+
+.board-icon {
+  margin-right: 4px;
+  flex-shrink: 0;
 }
 
 .community-name {
   color: #1a1a1b;
   font-weight: 600;
-  margin: 0 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -78,12 +110,13 @@ const displayTime = computed(() => formatPostTime(props.post.createTime));
   font-size: 14px;
   font-weight: 500;
   color: #1a1a1b;
-  margin: 4px 0;
+  margin: 6px 0;
   line-height: 1.4;
   display: -webkit-box;
-  -webkit-line-clamp: 2; /* 标题最多两行 */
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  word-break: break-word;
 }
 
 .item-footer {
@@ -93,15 +126,22 @@ const displayTime = computed(() => formatPostTime(props.post.createTime));
   align-items: center;
 }
 
-.dot { margin: 0 4px; }
+.dot { margin: 0 4px; font-size: 10px; }
 
 .item-media {
-  width: 64px;
-  height: 48px;
+  width: 80px;
+  height: 60px;
   border-radius: 4px;
   overflow: hidden;
   flex-shrink: 0;
-  background-color: #f0f0f0;
+  background-color: #f6f7f8;
+  /* 图片也要有个极细的边框，防止全白图片看不清边缘 */
+  border: 1px solid #edeff1;
+}
+
+.media-img {
+  width: 100%;
+  height: 100%;
 }
 
 .item-media.placeholder {
@@ -109,6 +149,6 @@ const displayTime = computed(() => formatPostTime(props.post.createTime));
   align-items: center;
   justify-content: center;
   color: #ccc;
-  font-size: 20px;
+  font-size: 24px;
 }
 </style>

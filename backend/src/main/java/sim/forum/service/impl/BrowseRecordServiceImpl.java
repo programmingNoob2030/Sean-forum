@@ -46,11 +46,10 @@ public class BrowseRecordServiceImpl implements BrowseRecordService {
         browseRecordMapper.insert(record);
     }
 
-
-
     /**
      * 这是一个通用的私有方法，专门负责从 Redis 捞出 ID
      */
+    @Override
     public List<Long> getIdsFromRedis(BrowseRecord.BrowseTarget target, Long userId) {
         String redisKey = "user:history:" + target.name() + ":" + userId;
         // 1. 从最新的开始拿
@@ -64,5 +63,12 @@ public class BrowseRecordServiceImpl implements BrowseRecordService {
         return idSet.stream()
                 .map(Long::valueOf)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    @Async("taskExecutor")
+    public void deletePostRecordAsync(Long userId) {
+        String redisKey = "user:history:POST" + ":" + userId;
+        redisTemplate.delete(redisKey);
     }
 }

@@ -14,5 +14,5 @@ public interface BrowseRecordService {
      */
     void saveRecordAsync(CreateBrowseRecordDTO dto, Long userId);
     List<Long> getIdsFromRedis(BrowseRecord.BrowseTarget target, Long userId);
-
+    void deletePostRecordAsync(Long userId);
 }

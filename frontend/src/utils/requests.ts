@@ -23,7 +23,12 @@ service.interceptors.request.use(
     return config
   },
   error => {
-    return Promise.reject(error)
+    if (error.response && error.response.status === 401) {
+      // 1. 清除本地过期的 Token 和用户信息
+      // 2. 跳转到登录页面，或者尝试用 Refresh Token 静默刷新
+      console.error("登录已过期，请重新登录");
+    }
+    return Promise.reject(error);
   }
 )
 

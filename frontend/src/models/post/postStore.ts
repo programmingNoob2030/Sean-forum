@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
-import type { PostVO } from "./postTypes";
+import type { RecentPostVO,  PostVO } from "./postTypes";
 import { ref } from 'vue'
-import { apiGetPosts } from "@/api/post";
+import { apiGetPosts, apiGetRecentPosts } from "@/api/post";
 import type { PageRequestDTO } from "../pages";
 export const usePostStore = defineStore('post', ()=>{
 
@@ -11,6 +11,7 @@ export const usePostStore = defineStore('post', ()=>{
     pageNum: 1,
     pageSize: 10
   })
+  const recentPostList = ref<RecentPostVO[]>([])
   const getPosts = async() => {
     try{
       if (dto.value){
@@ -22,10 +23,21 @@ export const usePostStore = defineStore('post', ()=>{
       console.log("获取帖子失败", error)
     }
   }
+  const getRecentPosts = async()=>{
+    try{
+      const res = await apiGetRecentPosts()
+      recentPostList.value = res
+    }catch(error){
+      console.log("获取帖子失败", error)
+    }
+  }
   return {
     dto,
     total,
     posts,
-    getPosts
+    getPosts,
+    recentPostList,
+    getRecentPosts
+    
   }
 })

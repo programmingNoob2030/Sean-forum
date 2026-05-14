@@ -24,3 +24,7 @@ export const apiSearchBoard = (keyword:string) => request.get<any, BriefBoardVO[
 // 获取广场社区
 export const apiGetSquareBoards = () => request.get<any, SquareBoardVO[]>('/boards')
 
+// 获取最近浏览社区
+export const apiGetRecentBoards = () => request.get<any, BriefBoardVO[]>('/boards/history')
+
+

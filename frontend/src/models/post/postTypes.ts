@@ -40,4 +40,10 @@ export type RestorePostDTO = Pick<Post, 'id'>;
 // 6.发帖窗口
 export type PostEditDTO = BrifePostDTO & BriefBoardVO;
 
+// 7.最近浏览帖子样式
+export type RecentPostVO = Pick<Post, 'id' | 'title' | 'content' | 
+                            'likeCount' | 'commentCount' | 'createTime' > 
+                            & {boardName:string,boardCover:string};
+
+
 

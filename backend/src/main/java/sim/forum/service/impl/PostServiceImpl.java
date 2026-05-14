@@ -11,9 +11,11 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import sim.forum.context.UserContext;
 import sim.forum.dto.PageRequestDTO;
+import sim.forum.dto.browserecord.CreateBrowseRecordDTO;
 import sim.forum.dto.post.CreatePostDTO;
 import sim.forum.dto.post.DeletePostDTO;
 import sim.forum.dto.post.RestorePostDTO;
+import sim.forum.entity.BrowseRecord;
 import sim.forum.entity.Post;
 import sim.forum.event.comment.CommentCreateEvent;
 import sim.forum.event.comment.CommentDeleteEvent;
@@ -25,9 +27,11 @@ import sim.forum.event.rating.ToggleRatingEvent;
 import sim.forum.exception.BusinessException;
 import sim.forum.mapper.PostMapper;
 import sim.forum.result.PageResult;
+import sim.forum.service.BrowseRecordService;
 import sim.forum.service.CountService;
 import sim.forum.service.PostService;
 import sim.forum.vo.post.PostVO;
+import sim.forum.vo.post.RecentPostVO;
 
 import java.util.List;
 
@@ -39,6 +43,8 @@ public class PostServiceImpl implements PostService {
     private PostMapper postMapper;
     @Autowired
     private CountService countService;
+    @Autowired
+    private BrowseRecordService browseRecordService;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
     @Override
@@ -94,6 +100,10 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostVO getPostById(Long userId, Long postId) {
         PostVO postVO = postMapper.getPostWithRatingConditionById(userId, postId);
+        CreateBrowseRecordDTO dto = new CreateBrowseRecordDTO();
+        dto.setTarget(BrowseRecord.BrowseTarget.POST);
+        dto.setTargetId(postId);
+        browseRecordService.saveRecordAsync(dto, userId);
         if (postVO == null) throw new BusinessException("没有找到此条帖子");
         return postVO;
     }
@@ -111,6 +121,21 @@ public class PostServiceImpl implements PostService {
         // PageHelper 转换为 PageInfo
         return PageResult.of(new PageInfo<>(list));
     }
+
+    @Override
+    public List<RecentPostVO> getRecentPosts(List<Long> ids, Long userId) {
+        if (userId == null) throw new BusinessException("此用户信息有误,无法查询帖子信息");
+        return postMapper.getRecentPosts(ids, userId);
+    }
+
+
+    @Override
+    public Integer getPostLikeCountById(Long postId){
+        Post p = postMapper.selectById(postId);
+        if (p == null) throw new BusinessException("此帖子不存在");
+        return p.getLikeCount();
+    }
+
     @EventListener(condition = "#event.target == T(sim.forum.entity.Rating$RatingType).POST")
     public void updatePostLikeCount(ToggleRatingEvent event) {
         countService.updateAtomicCount(postMapper, event.targetId(),
@@ -131,12 +156,4 @@ public class PostServiceImpl implements PostService {
         countService.updateAtomicCount(postMapper, event.targetId(),
                 "comment_count", 1,true);
     }
-
-    @Override
-    public Integer getPostLikeCountById(Long postId){
-        Post p = postMapper.selectById(postId);
-        if (p == null) throw new BusinessException("此帖子不存在");
-        return p.getLikeCount();
-    }
-
 }

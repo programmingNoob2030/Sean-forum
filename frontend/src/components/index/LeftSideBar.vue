@@ -20,8 +20,13 @@
       </div>
       
       <div v-show="isRecentOpen" class="sub-menu">
-        <div class="menu-item sub-item">r/Java</div>
-        <div class="menu-item sub-item">r/SpringBoot</div>
+        <div class="my-boards-section">
+          <BriefBoardItem 
+            v-for="board in boardStore.recentBoardList" 
+            :key="board.id"
+            v-bind="board" 
+          />
+        </div>
       </div>
     </div>
     <div class="menu-group">
@@ -69,6 +74,7 @@ const handleRefresh = async() => {
 onMounted(async()=>{
   if (userStore.token) {
     await boardStore.getBoardListByUserId()
+    await boardStore.getRecentBoardList()
   }
 })
 watch(() => userStore.token, async (newId) => {

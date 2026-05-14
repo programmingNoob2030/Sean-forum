@@ -5,7 +5,9 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import sim.forum.entity.Post;
+import sim.forum.vo.board.BriefBoardVO;
 import sim.forum.vo.post.PostVO;
+import sim.forum.vo.post.RecentPostVO;
 
 import java.util.List;
 
@@ -21,4 +23,7 @@ public interface PostMapper extends BaseMapper<Post> {
     List<PostVO> getPostsWithRatingCondition(Long userId);
 
     PostVO getPostWithRatingConditionById(Long userId, Long postId);
+
+    List<RecentPostVO> getRecentPosts(List<Long> ids, Long userId);
+
 }

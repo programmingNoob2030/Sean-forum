@@ -1,4 +1,4 @@
-import type { CreatePostDTO, DeletePostDTO, RestorePostDTO } from '@/models/post/postTypes'
+import type { CreatePostDTO, DeletePostDTO, RecentPostVO, RestorePostDTO } from '@/models/post/postTypes'
 import request from '@/utils/requests'
 import type { PostVO } from '@/models/post/postTypes'
 import type { PageResult } from '@/models/pages'
@@ -20,3 +20,10 @@ export const apiRestorePost = (dto: RestorePostDTO) => request.patch('/posts', d
 
 // 根据ID获取帖子信息
 export const apiGetPostById = (id: number) => request.get<any,PostVO>(`/post/${id}`) 
+
+// 获取最近浏览帖子
+export const apiGetRecentPosts = () => request.get<any,RecentPostVO[]>(`/posts/history`) 
+
+// 清空最近浏览的帖子
+export const apiDeleteRecentPosts = () => request.delete<any,string>(`/posts/history`) 
+
