@@ -128,25 +128,31 @@ CREATE DATABASE forum_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 |          | `/session`       | `POST`   | 用户登录（获取 JWT 及个人信息）  |
 |          | `/email`         | `GET`    | 校验邮箱可用性/是否已注册        |
 |          | `/code`          | `GET`    | 校验邮箱验证码准确性             |
-|          | `/password`      | `PUT`    | **重置用户密码**                 |
+|          | `/password`      | `PUT`    | 重置用户密码                 |
 |          | `/info`          | `PUT`    | 更新用户资料（如昵称等）         |
 |          | `/user/avatar`   | `POST`   | 上传/更新个人头像                |
-| **板块** | `/boards`        | `POST`   | 创建新板块                       |
-|          | `/boards`        | `GET`    | 获取板块广场列表                 |
-|          | `/boards/mine`   | `GET`    | 获取我加入/创建的板块            |
-|          | `/board/{id}`    | `GET`    | 获取特定板块详情                 |
-|          | `/board/search`  | `GET`    | 根据关键字搜索板块               |
-|          | `/board/cover`   | `POST`   | 上传/更换板块封面图              |
-| **帖子** | `/posts`         | `POST`   | 在指定板块下发布新帖子           |
+| **社区** | `/boards`        | `POST`   | 创建新社区                       |
+|          | `/boards`        | `GET`    | 获取社区广场列表                 |
+|          | `/boards/mine`   | `GET`    | 获取我加入/创建的社区            |
+|          | `/board/{id}`    | `GET`    | 获取特定社区详情                 |
+|          | `/board/search`  | `GET`    | 根据关键字搜索社区               |
+|          | `/board/cover`   | `POST`   | 上传/更换社区封面图              |
+|          | `/boards/history`   | `GET`   |  **获取最近浏览的社区**(5条之内)        |
+|          | `/boards/history`   | `DELETE`   | **删除最近浏览的社区记录**         |
+| **帖子** | `/posts`         | `POST`   | 在指定社区下发布新帖子      |
 |          | `/posts`         | `GET`    | 分页获取帖子列表（支持可选认证） |
 |          | `/post/{id}`     | `GET`    | 获取帖子正文及详细信息           |
-|          | `/posts`         | `DELETE` | **逻辑删除帖子**                 |
-|          | `/posts`         | `PATCH`  | **恢复已删除的帖子**             |
+|          | `/posts`         | `DELETE` | 逻辑删除帖子                 |
+|          | `/posts`         | `PATCH`  | 恢复已删除的帖子             |
+|		   | `/posts/history` | `GET`    | **获取最近浏览的帖子**(9条之内) |
+|		   | `/posts/history` | `DELETE`    | **删除最近浏览的帖子记录** |
 | **评论** | `/post-comments` | `GET`    | 分页获取指定帖子下的评论列表     |
 |          | `/comments`      | `POST`   | 发表新评论                       |
-|          | `/comments`      | `DELETE` | **逻辑删除评论**                 |
-|          | `/comments`      | `PATCH`  | **恢复已删除的评论**             |
-| **评分** | `/ratings`       | `PUT`    | **Toggle 机制**：切换点赞/踩状态 |
+|          | `/comments`      | `DELETE` | 逻辑删除评论                 |
+|          | `/comments`      | `PATCH`  | 恢复已删除的评论         |
+| **评分** | `/ratings`       | `PUT`    | Toggle 机制：切换点赞/踩状态 |
+
+
 
 ## 🛡️ 安全性说明
 
