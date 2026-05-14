@@ -11,7 +11,7 @@
  Target Server Version : 80026 (8.0.26)
  File Encoding         : 65001
 
- Date: 12/05/2026 12:22:55
+ Date: 14/05/2026 13:26:48
 */
 
 SET NAMES utf8mb4;
@@ -51,6 +51,19 @@ CREATE TABLE `boards`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
+-- Table structure for browse_records
+-- ----------------------------
+DROP TABLE IF EXISTS `browse_records`;
+CREATE TABLE `browse_records`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '记录的ID',
+  `user_id` bigint NOT NULL COMMENT '用户的ID',
+  `target` enum('POST','BOARD') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '用户访问的对象',
+  `target_id` bigint NOT NULL COMMENT '用户访问的对象的ID',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '用户访问该对象的时间',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 49 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
 -- Table structure for comments
 -- ----------------------------
 DROP TABLE IF EXISTS `comments`;
@@ -67,7 +80,7 @@ CREATE TABLE `comments`  (
   `root_type` enum('COMMENT','USER','POST','EMPTY') CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'EMPTY' COMMENT '评论的根对象的类型',
   `parent_id` bigint NULL DEFAULT NULL COMMENT '顶级评论的ID',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 107 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 108 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for posts
@@ -84,7 +97,7 @@ CREATE TABLE `posts`  (
   `is_deleted` tinyint NULL DEFAULT 0 COMMENT '帖子的可见性',
   `board_id` bigint NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 17805 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 17808 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for ratings
