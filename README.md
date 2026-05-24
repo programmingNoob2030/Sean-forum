@@ -151,6 +151,8 @@ CREATE DATABASE forum_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 |          | `/comments`      | `DELETE` | 逻辑删除评论                 |
 |          | `/comments`      | `PATCH`  | 恢复已删除的评论         |
 | **评分** | `/ratings`       | `PUT`    | Toggle 机制：切换点赞/踩状态 |
+| **消息**|`/message/unread-count`|`GET`   |获取用户**未读**消息数|
+||`/messages`|`GET`|获取用户全部消息| 
 
 
 
@@ -166,7 +168,7 @@ CREATE DATABASE forum_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ## 🚧 待办事项 (Roadmap)
 
 - **权限加固 (Security)**：基于 `Interceptor` 实现管理员/用户角色校验，保护逻辑删除等敏感接口。
-- **缓存进阶 (Redis)**：利用 Redis 实现“热门帖子排行”与“用户最近浏览足迹”，提升响应速度。
-- **异步解耦 (Spring Event)**：利用异步事件处理评论、点赞后的“站内信”通知，优化发帖性能。
+- **缓存进阶 (Redis)**：利用 Redis 实现“热门帖子排行”与“用户最近浏览足迹”，提升响应速度。(初步完成)
+- **异步解耦 (Spring Event)**：利用异步事件处理评论、点赞后的“站内信”通知，优化发帖性能。(初步完成)
 - **SQL 调优 (Optimization)**：针对核心业务表建立复合索引，优化 `LIKE` 查询与大分页查询效率。
-- **工程交付 (DevOps)**：完善数据库初始化脚本与项目部署手册，提升项目交付标准。
+- **工程交付 (DevOps)**：完善数据库初始化脚本与项目部署手册，提升项目交付标准。(与时俱进)
