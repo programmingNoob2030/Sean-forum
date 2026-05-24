@@ -1,6 +1,7 @@
 package sim.forum.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -8,16 +9,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import sim.forum.context.UserContext;
+import sim.forum.dto.message.SendMessageDTO;
 import sim.forum.dto.rating.RatingDTO;
+import sim.forum.entity.Message;
 import sim.forum.entity.Rating;
 import sim.forum.event.rating.ToggleRatingEvent;
 import sim.forum.exception.BusinessException;
 import sim.forum.mapper.RatingMapper;
 import sim.forum.service.CommentService;
+import sim.forum.service.MessageService;
 import sim.forum.service.PostService;
 import sim.forum.service.RatingService;
 import sim.forum.vo.rating.RatingVO;
 
+@Slf4j
 @Service
 @Transactional
 @Validated
@@ -29,6 +34,8 @@ public class RatingServiceImpl implements RatingService {
     @Autowired
     private PostService postService;
     @Autowired
+    private MessageService messageService;
+    @Autowired
     private CommentService commentService;
 
     @Override
@@ -38,9 +45,9 @@ public class RatingServiceImpl implements RatingService {
         return rating;
     }
 
-    public Rating handleVote(RatingDTO dto) {
+    public RatingVO handleVote(RatingDTO dto, Long userId) {
         // 获取当前状态 (Current State)
-        Integer current = mappingState(UserContext.getUserId(), dto.getTargetId(), dto.getTarget()); // 当前记录的状态 点赞 空 拉踩 : 1 0 -1
+        Integer current = mappingState(userId, dto.getTargetId(), dto.getTarget()); // 当前记录的状态 点赞 空 拉踩 : 1 0 -1
         current = current == -2 ? 0 : current;
         Integer intent = (dto.getAction() == 1) ? 1 : -1; // 用户当前操作 点赞 拉踩 : 1 -1
 
@@ -76,11 +83,7 @@ public class RatingServiceImpl implements RatingService {
             newCount = commentService.getCommentLikeCountById(dto.getTargetId());
         }else if (dto.getTarget() == Rating.RatingType.POST){
             newCount = postService.getPostLikeCountById(dto.getTargetId());
-
-        }else if(dto.getTarget() == Rating.RatingType.USER){
-            System.out.println("给用户点赞了");
         }
-
         RatingVO ratingVO = new RatingVO();
         if (r == null) {
             BeanUtils.copyProperties(rating, ratingVO);
@@ -88,6 +91,27 @@ public class RatingServiceImpl implements RatingService {
             BeanUtils.copyProperties(r, ratingVO);
         }
         ratingVO.setLikeCount(newCount);
+        if (target == 0) return ratingVO;
+
+        // 发送消息
+        SendMessageDTO sendDTO = new SendMessageDTO();
+        if (target < 0) sendDTO.setAction(Message.Action.DISLIKE);
+        else sendDTO.setAction(Message.Action.LIKE);
+        sendDTO.setContent(null);
+        sendDTO.setSenderId(userId);
+        Long receiverId = null;
+        if (dto.getTarget() == Rating.RatingType.COMMENT){
+            receiverId = commentService.getUserIdByCommentId(dto.getTargetId());
+        }else if (dto.getTarget() == Rating.RatingType.POST){
+            receiverId = postService.getUserIdByPostId(dto.getTargetId());
+        }
+        if (receiverId == null) {
+            log.warn("未能找到消息接收者，可能原内容已被删除。发送人: {}, 载体ID: {}", userId, dto.getTargetId());
+        }
+        sendDTO.setReceiverId(receiverId);
+        sendDTO.setTarget(dto.getTarget().name());
+        sendDTO.setTargetId(dto.getTargetId());
+        messageService.send(sendDTO);
         return ratingVO;
     }
     public Integer mappingState(Long creator, Long targetId, Rating.RatingType target){

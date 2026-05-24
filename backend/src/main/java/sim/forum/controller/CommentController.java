@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import sim.forum.annotation.OptionalAuth;
+import sim.forum.context.UserContext;
 import sim.forum.dto.comment.GetPostCommentsDTO;
 import sim.forum.result.PageResult;
 import sim.forum.result.Result;
@@ -22,7 +23,8 @@ public class CommentController {
     private CommentService commentService;
     @PostMapping("/comments")
     public Result<Comment> createComment(@Valid @RequestBody CommentDTO dto){
-        Comment comment = commentService.createComment(dto);
+        Long userId = UserContext.getUserId();
+        Comment comment = commentService.createComment(dto, userId);
         return Result.success(comment);
     }
     @DeleteMapping("/comments")

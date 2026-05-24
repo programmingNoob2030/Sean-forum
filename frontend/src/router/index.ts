@@ -48,6 +48,12 @@ const routes = [
     name: 'BoardSquare',
     component: ()=>import('@/views/boards/BoardSquare.vue'), // 访问 http://localhost:5173/admin/posts 进入管理页
     props: true
+  },
+  {
+    path: '/message-detail',
+    name: 'MessageDetail',
+    component: ()=>import('@/views/messages/MessageDetail.vue'), // 访问 http://localhost:5173/admin/posts 进入管理页
+    props: true
   }
 ]
 

@@ -30,4 +30,6 @@ public interface PostService {
     Integer getPostLikeCountById(Long postId);
 
     List<RecentPostVO> getRecentPosts(List<Long> ids, Long userId);
+
+    Long getUserIdByPostId(Long postId);
 }

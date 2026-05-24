@@ -37,5 +37,6 @@ public class WebConfig implements WebMvcConfigurer {
     public void debug() {
         System.out.println("DEBUG: Loaded upload path is: " + uploadPath);
     }
+
 }
 

@@ -24,7 +24,15 @@ public class ThreadPoolConfig {
         executor.setThreadNamePrefix("ForumAsync-");
         // 等待所有任务结束后再关闭线程池
         executor.setWaitForTasksToCompleteOnShutdown(true);
+
+
+        // 关键点：加上这一行
+        // 当任务队列满且线程数达上限时，由“调用者线程”（比如执行点赞业务的 Controller 线程）自己执行任务
+        // 这能有效防止消息丢失，并自动减缓请求速度
+        executor.setRejectedExecutionHandler(new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
+
         return executor;
+
     }
 }

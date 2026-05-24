@@ -11,7 +11,7 @@ import sim.forum.vo.comment.CommentVO;
 import java.util.List;
 
 public interface CommentService {
-    Comment createComment(CommentDTO dto);
+    Comment createComment(CommentDTO dto, Long userId);
 
     void deleteComment(DeleteCommentDTO dto);
 
@@ -22,4 +22,6 @@ public interface CommentService {
     PageResult<CommentVO> getCommentsByPostId(GetPostCommentsDTO dto);
 
     Integer getCommentLikeCountById(Long commentId);
+
+    Long getUserIdByCommentId(Long commentId);
 }

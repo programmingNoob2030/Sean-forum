@@ -136,6 +136,12 @@ public class PostServiceImpl implements PostService {
         return p.getLikeCount();
     }
 
+    @Override
+    public Long getUserIdByPostId(Long postId) {
+        Post p = postMapper.selectById(postId);
+        return p == null ? null :  p.getCreator();
+    }
+
     @EventListener(condition = "#event.target == T(sim.forum.entity.Rating$RatingType).POST")
     public void updatePostLikeCount(ToggleRatingEvent event) {
         countService.updateAtomicCount(postMapper, event.targetId(),

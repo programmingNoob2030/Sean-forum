@@ -17,7 +17,8 @@ public class RatingController {
     private RatingService ratingService;
     @PutMapping("/ratings")
     public Result<Rating> toggleRating(@Valid @RequestBody RatingDTO dto){
-        Rating rating = ratingService.handleVote(dto);
+        Long userId = UserContext.getUserId();
+        Rating rating = ratingService.handleVote(dto, userId);
         return Result.success(rating);
     }
 
