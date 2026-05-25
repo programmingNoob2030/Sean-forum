@@ -19,7 +19,7 @@ public interface CommentService {
     Comment selectById(Long id);
 
 
-    PageResult<CommentVO> getCommentsByPostId(GetPostCommentsDTO dto);
+    PageResult<CommentVO> getCommentsByPostId(GetPostCommentsDTO dto, Long userId);
 
     Integer getCommentLikeCountById(Long commentId);
 

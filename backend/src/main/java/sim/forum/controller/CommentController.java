@@ -41,7 +41,8 @@ public class CommentController {
     @GetMapping("/post-comments")
     @OptionalAuth
     public Result<PageResult<CommentVO>> getCommentsByPostId(GetPostCommentsDTO dto){
-        PageResult<CommentVO> comments = commentService.getCommentsByPostId(dto);
+        Long userId = UserContext.getUserId();
+        PageResult<CommentVO> comments = commentService.getCommentsByPostId(dto, userId);
         return Result.success(comments);
     }
 }

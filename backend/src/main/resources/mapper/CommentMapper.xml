@@ -2,22 +2,61 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="sim.forum.mapper.CommentMapper">
 
-    <select id="getCommentsWithRatingCondition">
+    <sql id="CommentVOColumns">
+        c.*,
+    u.name AS creatorName,
+    u.avatar AS creatorAvatar,
+    r.type AS userRatingType
+    </sql>
+
+    <select id="getRootCommentsWithRatingCondition"
+            resultType="sim.forum.vo.comment.CommentVO">
         SELECT
-            c.*,
-            u.name AS creatorName,
-            u.avatar AS creatorAvatar,
-            r.type AS commentRatingType
+        <include refid="CommentVOColumns"/>
         FROM comments c
-             LEFT JOIN users u ON c.creator = u.id
-             LEFT JOIN ratings r ON c.id = r.target_id
-                AND r.target = 'COMMENT'
-                AND r.creator = #{userId}
-        WHERE
-          -- 核心逻辑：只要 rootId 是这个帖子，一律带走
-          -- 这就是你说的：rootId = 帖子ID, rootType = "POST"
-            c.root_id = #{postId}
-            AND c.root_type = 'POST'
+        LEFT JOIN users u ON c.creator = u.id
+        LEFT JOIN ratings r
+        ON r.target = 'COMMENT'
+        AND r.target_id = c.id
+        AND r.creator = #{userId}
+        WHERE c.target = 'POST'
+        AND c.target_id = #{postId}
+        AND c.is_deleted = 0
+        AND c.parent_id = 0
+        ORDER BY c.create_time DESC
+    </select>
+
+    <select id="getChildrenCommentsByParentIds"
+            resultType="sim.forum.vo.comment.CommentVO">
+        SELECT
+        c.*,
+        u.name AS creatorName,
+        u.avatar AS creatorAvatar,
+        r.type AS userRatingType,
+
+        pu.id AS replyToUserId,
+        pu.name AS replyToName
+        FROM comments c
+        LEFT JOIN users u ON c.creator = u.id
+        LEFT JOIN ratings r
+        ON r.target = 'COMMENT'
+        AND r.target_id = c.id
+        AND r.creator = #{userId}
+
+        LEFT JOIN comments pc
+        ON pc.id = c.target_id
+        AND c.target = 'COMMENT'
+        LEFT JOIN users pu ON pu.id = pc.creator
+
+        WHERE c.root_type = 'POST'
+        AND c.root_id = #{postId}
+        AND c.parent_id IN
+        <foreach collection="parentIds" item="parentId" open="(" separator="," close=")">
+            #{parentId}
+        </foreach>
+        AND c.is_deleted = 0
         ORDER BY c.create_time ASC
     </select>
+
+
 </mapper>

@@ -2,6 +2,7 @@ package sim.forum.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 import sim.forum.entity.Comment;
@@ -18,5 +19,12 @@ public interface CommentMapper extends BaseMapper<Comment> {
     @Update("update comments set is_deleted = 0 where id = #{id}")
     void updateByIdIgnoreDeleted(Comment comment);
 
-    List<CommentVO> getCommentsWithRatingCondition(Long userId, Long postId);
+    List<CommentVO> getRootCommentsWithRatingCondition(@Param("userId") Long userId,
+                                                       @Param("postId") Long postId);
+
+    List<CommentVO> getChildrenCommentsByParentIds(@Param("userId") Long userId,
+                                                   @Param("postId") Long postId,
+                                                   @Param("parentIds") List<Long> parentIds);
+
+
 }

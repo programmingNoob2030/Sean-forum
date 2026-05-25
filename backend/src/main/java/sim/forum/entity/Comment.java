@@ -43,7 +43,6 @@ public class Comment {
     /* 评论的根节点类型 */
     private CommentTarget rootType;
 
-
     /* 顶级评论的ID */
     private Long parentId;
 

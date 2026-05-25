@@ -111,33 +111,42 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public PageResult<CommentVO> getCommentsByPostId(GetPostCommentsDTO dto) {
+    public PageResult<CommentVO> getCommentsByPostId(GetPostCommentsDTO dto, Long userId) {
         int num = (dto.getPageNum() == null || dto.getPageNum() <= 0) ? 1 : dto.getPageNum();
-        int size = (dto.getPageSize() == null || dto.getPageSize() <= 0) ? 10 : dto.getPageSize();
-        // PageHelper分页操作必须紧扣查询语句上方
-        PageHelper.startPage(num, size);
-        List<CommentVO> list = commentMapper.getCommentsWithRatingCondition(UserContext.getUserId(),dto.getPostId());
-        // PageHelper 转换为 PageInfo
-        Map<Long, CommentVO> nodeMap = new HashMap<>();
-        List<CommentVO> roots = new ArrayList<>();
 
-        for (CommentVO vo : list){
-            vo.setChildren(new ArrayList<>());
-            nodeMap.put(vo.getId(), vo);
-            if (vo.getParentId() == 0){
-                roots.add(vo);
-            }
+        int size = (dto.getPageSize() == null || dto.getPageSize() <= 0) ? 10 : dto.getPageSize();
+
+        PageHelper.startPage(num, size);
+        List<CommentVO> rootList = commentMapper.getRootCommentsWithRatingCondition(userId, dto.getPostId());
+
+        PageInfo<CommentVO> pageInfo = new PageInfo<>(rootList);
+
+        if (rootList == null || rootList.isEmpty()) {
+            return PageResult.of(pageInfo);
         }
 
-        for (CommentVO vo : list){
-            if (vo.getParentId() != 0){
-                CommentVO parent = nodeMap.get(vo.getParentId());
-                if (parent != null){
-                    parent.getChildren().add(vo);
+        Map<Long, CommentVO> rootMap = new HashMap<>();
+        List<Long> parentIds = new ArrayList<>();
+
+        for (CommentVO root : rootList) {
+            root.setChildren(new ArrayList<>());
+            rootMap.put(root.getId(), root);
+            parentIds.add(root.getId());
+        }
+
+        List<CommentVO> childrenList = commentMapper.getChildrenCommentsByParentIds(userId, dto.getPostId(), parentIds);
+
+        if (childrenList != null && !childrenList.isEmpty()) {
+            for (CommentVO child : childrenList) {
+                child.setChildren(new ArrayList<>());
+
+                CommentVO root = rootMap.get(child.getParentId());
+                if (root != null) {
+                    root.getChildren().add(child);
                 }
             }
         }
-        return PageResult.of(new PageInfo<>(roots));
+        return PageResult.of(pageInfo);
     }
 
     @Override

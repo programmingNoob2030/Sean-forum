@@ -16,6 +16,7 @@ export const useCommentStore = defineStore('comment', ()=>{
     try{
       if (dto.value){
         const res = await apiGetCommentsByPostId(dto.value)
+        console.log("拿到的数据", res)
         commentList.value = res.list// 直接更新 store 里的状态
         total.value = res.total
       }
