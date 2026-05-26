@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 import sim.forum.dto.PageRequestDTO;
+import sim.forum.dto.message.QueryMessageDTO;
 import sim.forum.dto.message.SendMessageDTO;
 import sim.forum.entity.Message;
 import sim.forum.exception.BusinessException;
@@ -62,13 +63,13 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public PageResult<MessageVO> getUserMessages(@RequestBody PageRequestDTO dto, Long userId) {
+    public PageResult<MessageVO> getUserMessages(@RequestBody QueryMessageDTO dto, Long userId) {
         int num = (dto.getPageNum() == null || dto.getPageNum() <= 0) ? 1 : dto.getPageNum();
         int size = (dto.getPageSize() == null || dto.getPageSize() <= 0) ? 10 : dto.getPageSize();
 
         // PageHelper分页操作必须紧扣查询语句上方
         PageHelper.startPage(num, size);
-        List<MessageVO> list = messageMapper.getUserMessages(userId);
+        List<MessageVO> list = messageMapper.getUserMessages(dto.getActions(), userId);
         return PageResult.of(new PageInfo<>(list));
     }
 }

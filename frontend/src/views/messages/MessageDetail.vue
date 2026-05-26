@@ -15,8 +15,8 @@
           <span class="menu-dot" :class="{ active: activeMenu === 'reply' }"></span>
           <span>回复我的</span>
         </el-menu-item>
-        <el-menu-item index="like">
-          <span class="menu-dot" :class="{ active: activeMenu === 'like' }"></span>
+        <el-menu-item index="rating">
+          <span class="menu-dot" :class="{ active: activeMenu === 'rating' }"></span>
           <span>收到的赞</span>
         </el-menu-item>
       </el-menu>
@@ -32,18 +32,37 @@
           
           <template v-if="activeMenu === 'reply'">
             <MessageItem 
-              v-for="item in replyMessages" 
+              v-for="item in messageStore.commentMessageList" 
               :key="'reply-' + item.id" 
               :item="item" 
             />
+            
+            <div class="pagination-wrapper">
+              <el-pagination 
+                background 
+                layout="prev, pager, next, jumper" 
+                :total="messageStore.commentTotal"
+                v-model:current-page = "messageStore.commentDTO.pageNum"
+                @current-change="handlePageChange('reply')"
+              />
+            </div>
           </template>
 
-          <template v-if="activeMenu === 'like'">
+          <template v-if="activeMenu === 'rating'">
             <MessageItem 
-              v-for="item in likeMessages" 
-              :key="'like-' + item.id" 
+              v-for="item in messageStore.ratingMessageList" 
+              :key="'rating-' + item.id" 
               :item="item" 
             />
+            <div class="pagination-wrapper">
+              <el-pagination 
+                background 
+                layout="prev, pager, next, jumper" 
+                :total="messageStore.ratingTotal"
+                v-model:current-page = "messageStore.ratingDTO.pageNum"
+                @current-change="handlePageChange('rating')"
+              />
+            </div>
           </template>
 
         </div>
@@ -57,6 +76,7 @@
         </div>
       </div>
     </div>
+    
   </div>
 </template>
 
@@ -72,41 +92,42 @@ const messageStore = useMessageStore()
 // 🎯 核心变动：页面挂载时，触发获取消息通知的异步请求
 onMounted(async () => {
   // 假设你的 store 里是统一获取当前用户的所有通知
-  await messageStore.getMessages() 
+  await messageStore.getCommentMessages() 
 })
 
-// 🎯 核心分流 A：从 Store 里的总数据源中，过滤出属于【评论/回复】的消息
-const replyMessages = computed(() => {
-  // 假设你的总列表叫 messageList，或者叫 commentMessageList
-  // 筛选出 action 为 COMMENT 的通知
-  return messageStore.commentMessageList.filter(msg => msg.action === 'COMMENT')
-})
-
-// 🎯 核心分流 B：过滤出属于【点赞/拉踩】的消息
-const likeMessages = computed(() => {
-  // 筛选出 action 为 LIKE 或者 DISLIKE 的通知，丢进“收到的赞”栏目里
-  return messageStore.commentMessageList.filter(msg => msg.action === 'LIKE' || msg.action === 'DISLIKE')
-})
-
-// 🎯 动态掌控：根据当前选中的 Tab，决定有没有数据需要展示
 const hasData = computed(() => {
   if (activeMenu.value === 'reply') {
-    return replyMessages.value.length > 0
+    return messageStore.commentMessageList.length > 0
   } else {
-    return likeMessages.value.length > 0
+    return messageStore.ratingMessageList.length > 0
   }
 })
 
 const currentTitle = computed(() => {
   return activeMenu.value === 'reply' ? '回复我的' : '收到的赞'
 })
-
-const handleSelect = (index: string) => {
+const handlePageChange = (index:string) => {
+  if (index === 'reply') messageStore.getCommentMessages()
+  if (index === 'rating') messageStore.getRatingMessages()
+  window.scrollTo(0, 0)
+}
+const handleSelect = async(index: string) => {
   activeMenu.value = index
+  if (activeMenu.value === 'rating'){
+    await messageStore.getRatingMessages()
+  }
+  if (activeMenu.value === 'reply'){
+    await messageStore.getCommentMessages()
+  }
 }
 </script>
 
 <style scoped>
+.pagination-wrapper {
+  display: flex; 
+  justify-content: center; 
+  margin: 30px 0;
+}
 /* 父组件的 CSS 瞬间少了一大半，只剩下大框架布局 */
 .message-center-container {
   display: flex;
@@ -217,7 +238,8 @@ const handleSelect = (index: string) => {
 .message-list {
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  padding: 12px;
+  background-color: #f6f7f8;
 }
 
 .empty-state {

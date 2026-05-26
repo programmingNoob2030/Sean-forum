@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import sim.forum.context.UserContext;
 import sim.forum.dto.PageRequestDTO;
+import sim.forum.dto.message.QueryMessageDTO;
 import sim.forum.result.PageResult;
 import sim.forum.result.Result;
 import sim.forum.service.MessageService;
@@ -23,7 +24,7 @@ public class MessageController {
     }
 
     @GetMapping("/messages")
-    public Result<PageResult<MessageVO>> getCommentMessages(PageRequestDTO dto) {
+    public Result<PageResult<MessageVO>> getCommentMessages(QueryMessageDTO dto) {
         Long userId = UserContext.getUserId();
         PageResult<MessageVO> list = messageService.getUserMessages(dto,userId);
         return Result.success(list);

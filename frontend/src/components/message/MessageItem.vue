@@ -88,15 +88,19 @@ const quotePrefix = computed(() => {
 .message-item {
   display: flex;
   padding: 16px 20px;
-  border-bottom: 1px solid #f6f7f8;
+  margin-bottom: 10px;
   gap: 12px;
-  transition: background-color 0.2s;
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  transition: background-color 0.2s, box-shadow 0.2s;
 }
 
 .message-item:hover {
-  background-color: #f8f9fa;
+  background-color: #fafafa;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
-
 .msg-avatar {
   width: 36px;
   height: 36px;
