@@ -9,7 +9,7 @@
             u.avatar AS avatar,
             m.action AS action,
             m.target_id AS targetId,
-
+            m.is_read AS isRead,
         -- 🎯 关键点一：契合你的 VO，把数字直接清洗成 String 字面量，前端接手直接起飞
         CASE m.target
             WHEN 1 THEN 'POST'

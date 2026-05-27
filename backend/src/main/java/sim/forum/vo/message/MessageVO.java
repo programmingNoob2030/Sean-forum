@@ -1,5 +1,6 @@
 package sim.forum.vo.message;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 import sim.forum.entity.Message;
 
@@ -32,4 +33,8 @@ public class MessageVO {
 
     // 时间
     private Date createTime;
+
+    // 是否已读
+    @TableField("is_read")
+    private Boolean isRead;
 }

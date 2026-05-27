@@ -1,18 +1,18 @@
 package sim.forum.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
-import sim.forum.dto.PageRequestDTO;
 import sim.forum.dto.message.QueryMessageDTO;
 import sim.forum.dto.message.SendMessageDTO;
 import sim.forum.entity.Message;
-import sim.forum.exception.BusinessException;
 import sim.forum.mapper.MessageMapper;
 import sim.forum.result.PageResult;
 import sim.forum.service.MessageService;
@@ -38,6 +38,7 @@ public class MessageServiceImpl implements MessageService {
         message.setSenderId(dto.getSenderId());
         message.setReceiverId(dto.getReceiverId());
         message.setTargetId(dto.getTargetId());
+        message.setIsRead(false);
         // 🎯 核心改变：用 valueOf 把 String 类型的 "POST" 或 "COMMENT" 还原成实体认的枚举
         if (dto.getTarget() != null) {
             // toUpperCase().trim() 是为了防止前端传参不规范（比如传了小写 "post"），增强鲁棒性
@@ -70,6 +71,25 @@ public class MessageServiceImpl implements MessageService {
         // PageHelper分页操作必须紧扣查询语句上方
         PageHelper.startPage(num, size);
         List<MessageVO> list = messageMapper.getUserMessages(dto.getActions(), userId);
+        String redisKey = "user:unread:count";
+        long count = 0L;
+
+        for (MessageVO vo : list) {
+            if (vo.getIsRead() == null || !vo.getIsRead()){
+                LambdaUpdateWrapper<Message> update = new LambdaUpdateWrapper<Message>().
+                        set(Message::getIsRead, true)
+                        .eq(Message::getId, vo.getId());
+                int rows = messageMapper.update(null,update);
+                if (rows > 0) {
+                    vo.setIsRead(true);
+                    count++;
+                }
+            }
+        }
+        Long finalCount = stringRedisTemplate.opsForHash().increment(redisKey, String.valueOf(userId), -count);
+        if (finalCount != null && finalCount < 0) {
+            stringRedisTemplate.opsForHash().put(redisKey, String.valueOf(userId), "0");
+        }
         return PageResult.of(new PageInfo<>(list));
     }
 }
