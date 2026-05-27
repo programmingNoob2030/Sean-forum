@@ -92,6 +92,10 @@ const messageStore = useMessageStore()
 // 🎯 核心变动：页面挂载时，触发获取消息通知的异步请求
 onMounted(async () => {
   // 假设你的 store 里是统一获取当前用户的所有通知
+
+  // 默认从第一页开始
+  messageStore.commentDTO.pageNum = 1
+  messageStore.ratingDTO.pageNum = 1
   await messageStore.getCommentMessages() 
 })
 

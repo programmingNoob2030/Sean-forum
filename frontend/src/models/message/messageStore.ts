@@ -48,8 +48,26 @@ export const useMessageStore = defineStore('message', ()=>{
       console.log("获取信息失败", error)
     }
   }
+  const resetStore =()=>{
+    unreadCount.value = 0
+    commentTotal.value = 0
+    ratingTotal.value = 0
+  
+    commentDTO.value = {
+      pageNum: 1,
+      pageSize: 10,
+      actions: ['COMMENT']
+    }
 
+    ratingDTO.value = {
+      pageNum: 1,
+      pageSize: 10,
+      actions: ['LIKE', 'DISLIKE']
+    }
 
+    commentMessageList.value = []
+    ratingMessageList.value = []
+  }
   return {
     unreadCount,
     commentMessageList,
@@ -60,6 +78,7 @@ export const useMessageStore = defineStore('message', ()=>{
     getCommentMessages,
     ratingDTO,
     ratingTotal,
-    getRatingMessages
+    getRatingMessages,
+    resetStore
   }
 })

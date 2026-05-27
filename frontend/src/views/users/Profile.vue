@@ -150,6 +150,8 @@ import { ref } from 'vue'
 import type { UpdateInfoDTO } from '@/models/user/userTypes'
 import { apiUpdateUserInfo, apiUploadAvatar } from '@/api/user' // Adjust paths
 import { useBoardStore } from '@/models/board/boardStore'
+import { useMessageStore } from '@/models/message/messageStore'
+
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -159,6 +161,7 @@ const submitting = ref(false)
 const previewUrl = ref('') 
 const baseUrl = import.meta.env.VITE_RESOURCE_URL
 const boardStore = useBoardStore()
+const messageStore = useMessageStore()
 // 表单响应式数据
 const editForm = ref<UpdateInfoDTO>({
   name: '',
@@ -229,6 +232,7 @@ const handleLogout = () => {
   }).then(() => {
     boardStore.briefBoardList = []
     userStore.handleLogout()
+    messageStore.resetStore()
     router.push('/login')
   }).catch(() => {})
 }
