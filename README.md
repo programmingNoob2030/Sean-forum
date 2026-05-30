@@ -1,20 +1,21 @@
-# Forum System Backend (Sean-Forum)
+
+
+# Sean's Forum - 基于 Spring Boot 3 + Vue3 的轻量级社区论坛系统
 
 ## 📖 项目简介
 
-本项目是一个基于 **Java 17** 和 **Spring Boot 3** 架构的现代化社区论坛系统。项目采用前后端分离模式，核心设计关注数据一致性、高并发下的缓存策略以及用户交互体验。系统集成了用户身份验证、板块管理、帖子发布、层级评论、以及基于 Redis 的会话管理等核心功能，适用于构建各类垂直社区或兴趣论坛。
+Sean's Forum 是一个前后端分离的轻量级社区论坛系统，围绕用户注册登录、板块创建与浏览、帖子发布、评论互动、点赞/点踩、站内消息和最近浏览记录等核心社区场景展开。
+
+项目后端基于 Spring Boot 3 构建 RESTful API，使用 MyBatis-Plus 操作 MySQL 完成核心业务数据持久化，并通过 Redis 管理邮箱验证码、登录会话和浏览记录等状态数据。前端基于 Vue3 + Element Plus 实现页面交互与接口联调，形成了从用户认证、内容发布到互动通知的完整业务闭环。
 
 ------
 
 ## 🛠️ 技术栈
 
-项目采用了当前主流的后端技术栈，确保系统的稳定与可扩展性：
-
-- **核心框架**：Spring Boot 3.5.11
-- **持久层**：MyBatis Plus 3.5.9 (配合 MySQL 驱动)
-- **数据库**：MySQL 8.0+
-- **缓存/会话**：Redis (Spring Data Redis + Spring Session)
-- **身份验证**：JWT (java-jwt 4.4.0) + jBCrypt (加盐哈希加密)
+- **前端框架**:   Vue3、Vite、Element Plus、Vue Router、Pinia、Axios
+- **后端框架**：Spring Boot 3、MyBatis-Plus
+- **数据存储**：MySQL、Redis
+- **身份验证**：JWT + jBCrypt 
 - **文件存储**：本地文件系统上传 (可扩展为 OSS)
 - **工具类**：Lombok, PageHelper (分页插件), Jakarta Validation (参数校验)
 - **邮件服务**：Spring Boot Mail (基于 SMTP 协议)
@@ -23,12 +24,30 @@
 
 ## 🏗️ 项目目录布局
 
-根据提供的项目截图及 Maven 标准，项目工程结构如下：
+项目采用前后端分离目录结构，工程结构如下：
 
-Plaintext
+前端
 
 ```
-forum
+frontend
+├── src/
+│   ├── api/                  # 接口请求封装
+│   ├── assets/               # 静态资源（如：default_avatar.svg）
+│   ├── components/           # 业务子组件（如：message/MessageItem.vue）
+│   ├── models/ 			  # 类型定义与 Pinia 状态管理
+│   ├── router/               # 路由映射与路由守卫
+│   ├── utils/                # 工具函数（如：axios封装、Token管理）
+│   ├── views/                # 页面级组件/路由入口（如：users/login.vue）
+│   ├── App.vue               # 顶层根组件
+│   ├── main.ts               # 项目入口文件
+│   └── style.css             # 全局基础样式
+└── index.html                # SPA 主 HTML 模板
+```
+
+后端
+
+```
+backend
 ├── src/main/java/sim/forum
 │   ├── annotation/        # 自定义注解（如：@OptionalAuth）
 │   ├── config/            # 框架配置（Redis, MVC, MyBatis Plus）
@@ -48,7 +67,7 @@ forum
 │   └── ForumApplication.java # 项目启动类
 └── src/main/resources
     ├── mapper/            # MyBatis XML 映射文件
-    └── application.yaml   # 核心配置文件
+    └── application.yaml.example   # 配置文件示例
 ```
 
 ------
@@ -84,39 +103,41 @@ forum
 
 ### 环境要求
 
-- **JDK**: 17+
-- **Maven**: 3.8+
-- **MySQL**: 8.0+(推荐)
-- **Redis**: 6.0+
+- **JDK**：17+
+- **Maven**：3.8+
+- **Node.js**：18+
+- **MySQL**：8.0+
+- **Redis**：6.0+
 
 ### 数据库配置
 
 1. 创建名为 `forum_db` 的数据库。
 
-2. 修改 `src/main/resources/application.yaml` 中的连接信息：
-
-   YAML
-
-   ```
-   datasource:
-     url: jdbc:mysql://localhost:3306/forum_db?serverTimezone=Asia/Shanghai
-     username: your_username
-     password: your_password
-   ```
-2. 数据库初始化 (核心步骤)
-手动创建名为 forum_db 的数据库：
-
 ```SQL
 CREATE DATABASE forum_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ```
-执行脚本：定位到项目根目录下的 sql/ 文件夹（或你存放脚本的位置），执行 forum_db.sql 以初始化表结构及必要的基础数据。
+执行项目根目录 sql/ 下的 forum_db.sql，初始化表结构及必要的基础数据。
 
-### 运行步骤
+### 后端启动
 
-1. 克隆项目并进入根目录。
-2. 执行 Maven 构建：`mvn clean install`。
-3. 启动 Redis 服务。
-4. 运行 `ForumApplication.java` 中的 `main` 方法。
+2. 将 `backend/src/main/resources/application.yaml.example` 复制为 `application.yaml`。
+3. 修改 `application.yaml` 中的 MySQL、Redis、邮箱等配置。
+4. 启动 MySQL 和 Redis。
+5. 进入后端目录启动服务：
+
+```bash
+cd backend
+mvn spring-boot:run
+```
+### 前端启动
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+启动后访问终端输出的 Vite 本地地址(http://localhost:5173)。
 
 ------
 
@@ -162,8 +183,6 @@ CREATE DATABASE forum_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 2. **身份令牌**：采用 `JWT` 机制，配合 `ThreadLocal` 在 `UserContext` 中管理用户态。
 3. **参数校验**：全量使用 `Jakarta Validation` 对 Controller 输入进行严格拦截。
 4. **会话持久化**：使用 `Spring Session Redis` 实现分布式环境下会话的一致性。
-
-
 
 ## 🚧 待办事项 (Roadmap)
 
