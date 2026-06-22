@@ -28,3 +28,4 @@ export const apiGetSquareBoards = () => request.get<any, SquareBoardVO[]>('/boar
 export const apiGetRecentBoards = () => request.get<any, BriefBoardVO[]>('/boards/history')
 
 
+

@@ -1,7 +1,9 @@
 import { defineStore } from "pinia";
 import { ref } from 'vue'
 import type { BriefBoardVO } from '@/models/board/boardTypes'
-import { apiGetMyBoards, apiGetRecentBoards } from "@/api/board";
+import { apiGetMyBoards, apiGetRecentBoards, apiGetBoardDetail } from "@/api/board";
+import { ca } from "element-plus/es/locale/index.mjs";
+import { ElMessage } from "element-plus";
 export const useBoardStore = defineStore('board', ()=>{
   const briefBoardList = ref<BriefBoardVO[]>([])
   const recentBoardList = ref<BriefBoardVO[]>([])
@@ -11,7 +13,7 @@ export const useBoardStore = defineStore('board', ()=>{
       const res = await apiGetMyBoards()
       briefBoardList.value = res
     }catch(error){
-      console.log("获取评价信息失败", error)
+      console.log("获取社区信息失败", error)
     }
   }
   const getRecentBoardList = async() =>{
@@ -19,7 +21,17 @@ export const useBoardStore = defineStore('board', ()=>{
       const res = await apiGetRecentBoards()
       recentBoardList.value = res
     }catch(error){
-      console.log("获取评价信息失败", error)
+      console.log("获取社区信息失败", error)
+    }
+  }
+  const getBoardDetailById = async(id:number) =>{
+    try{
+      const res = await apiGetBoardDetail(id)
+      if(res)return res
+      else ElMessage.error("没有找到此社区的信息")
+    }catch(error){
+      console.log("获取社区信息失败", error)
+
     }
   }
 
@@ -28,6 +40,7 @@ export const useBoardStore = defineStore('board', ()=>{
     briefBoardList,
     recentBoardList,
     getBoardListByUserId,
-    getRecentBoardList
+    getRecentBoardList,
+    getBoardDetailById
   }
 })
