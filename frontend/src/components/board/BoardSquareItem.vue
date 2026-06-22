@@ -8,14 +8,13 @@
       />
       
       <div class="card-meta">
-        <h3 class="card-name">{{ board.name }}</h3>
+        <h3 class="card-name">r/{{ board.name }}</h3>
         <p class="card-stats">{{ formatNumber(board.weeklyVisitor) }} 个每周访客</p>
       </div>
 
-      <!-- 情况 A：游客，显示加入 -->
       <el-button 
         v-if="!board.role"
-        type="primary" 
+        class="btn-join"
         round 
         size="small" 
         @click.stop="onJoin"
@@ -23,27 +22,24 @@
         加入
       </el-button>
 
-      <!-- 情况 B：创建者或管理员，显示管理 -->
       <el-button 
         v-else-if="['CREATOR', 'ADMIN'].includes(board.role)"
-        type="warning" 
+        class="btn-manage"
         round 
         size="small" 
         @click.stop="onManage"
       >
-        管理
+        ⚙️ 管理
       </el-button>
 
-      <!-- 情况 C：普通成员，显示退出 -->
       <el-button 
         v-else
-        type="info" 
-        plain
+        class="btn-joined"
         round 
         size="small" 
         @click.stop="onLeave"
       >
-        退出
+        已加入
       </el-button>
     </div>
 
@@ -57,8 +53,6 @@
 import type { SquareBoardVO } from '@/models/board/boardTypes';
 import { useRouter } from 'vue-router';
 const baseUrl = import.meta.env.VITE_RESOURCE_URL
-// 这里定义接收数据的结构
-
 
 const props = defineProps<{
   board: SquareBoardVO;
@@ -67,7 +61,6 @@ const props = defineProps<{
 const emit = defineEmits(['join','leave','manage']);
 const router = useRouter();
 
-// 数字格式化，12000 -> 1.2万
 const formatNumber = (num?: number) => {
   if (!num) return 0;
   return num > 10000 ? (num / 10000).toFixed(1) + '万' : num;
@@ -77,32 +70,28 @@ const handleNavigate = () => {
   router.push(`/board/${props.board.id}`);
 };
 
-const onJoin = () => {
-  emit('join', props.board.id);
-};
-const onLeave = () => {
-  emit('leave', props.board.id);
-};
-const onManage = () => {
-  emit('manage', props.board.id);
-};
+const onJoin = () => { emit('join', props.board.id); };
+const onLeave = () => { emit('leave', props.board.id); };
+const onManage = () => { emit('manage', props.board.id); };
 </script>
 
 <style scoped>
+/* ==========================================================================
+   1. 局部作用域 CSS 变量 (与 BoardDetail 保持严格一致)
+   ========================================================================== */
 .board-card {
+  --reddit-blue: #0079d3;
+  --text-dark: #1c1c1c;
+  --text-gray: #7c7c7c;
+  --border-color: #ccc;
+  
   background-color: #ffffff;
-  color: #1c1c1c;
+  color: var(--text-dark);
   padding: 20px; 
-  
-  /* 1. 边框颜色调回 Reddit 标志性的淡灰色 */
-  border: 1px solid #ccc;
-  border-radius: 4px; /* Reddit 的圆角其实偏小，4px 更硬朗 */
-  
-  /* 2. 移除明显的阴影，改用极淡的投影或不加阴影 */
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
   box-shadow: none; 
-  
   cursor: pointer;
-  /* 3. 缩短过渡时间，让反馈更干脆 */
   transition: border-color 0.1s ease-in-out;
   
   display: flex;
@@ -113,11 +102,12 @@ const onManage = () => {
 }
 
 .board-card:hover {
-  /* 4. 关键：悬停时不改阴影、不位移，只让边框颜色深一点点 */
   border-color: #898989; 
-  transform: none; /* 彻底移除位移效果 */
 }
 
+/* ==========================================================================
+   2. 头部元数据
+   ========================================================================== */
 .card-header {
   display: flex;
   align-items: center;
@@ -129,7 +119,7 @@ const onManage = () => {
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  background-color: #fff;
+  background-color: #ffffff;
   border: 1px solid #edeff1;
 }
 
@@ -140,9 +130,9 @@ const onManage = () => {
 
 .card-name {
   margin: 0;
-  color: #1c1c1c;
+  color: var(--text-dark);
   font-size: 16px;
-  font-weight: 600; /* Reddit 的标题没那么黑粗，用 600 刚好 */
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -150,27 +140,13 @@ const onManage = () => {
 
 .card-stats {
   margin: 2px 0 0;
-  color: #7c7c7c;
+  color: var(--text-gray);
   font-size: 12px;
-}
-
-/* 按钮逻辑也要根据你的 role 字段动态切换 */
-.card-join-btn {
-  /* 使用黑色或深蓝色，但不要发光效果 */
-  background-color: #0079d3 !important; 
-  color: #ffffff !important;
-  border: none !important;
-  font-weight: 700 !important;
-  padding: 8px 16px !important;
-}
-
-.card-join-btn:hover {
-  background-color: #1484d6 !important; /* 悬停稍微亮一点点即可 */
 }
 
 .card-description {
   margin: 0;
-  color: #1c1c1c; /* 保持文字颜色统一 */
+  color: var(--text-dark);
   font-size: 14px;
   line-height: 1.5;
   display: -webkit-box;
@@ -178,5 +154,50 @@ const onManage = () => {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   3. 核心重构：覆盖 Element Plus 按钮默认皮肤
+   ========================================================================== */
+/* 统一覆盖 el-button 的原生全局底色，确保完全由我们手写的类名接管 */
+.card-header :deep(.el-button) {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  padding: 6px 16px !important;
+  height: auto !important;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+/* 情况 A：加入按钮 (深蓝底白字) */
+.btn-join {
+  background-color: var(--reddit-blue) !important;
+  color: #ffffff !important;
+}
+.btn-join:hover {
+  background-color: #33a8ff !important;
+}
+
+/* 情况 B：管理按钮 (浅灰底黑字加边框) */
+.btn-manage {
+  background-color: #f6f7f8 !important;
+  color: var(--text-dark) !important;
+  border: 1px solid var(--border-color) !important;
+}
+.btn-manage:hover {
+  background-color: #e8f4ff !important;
+  border-color: var(--reddit-blue) !important;
+}
+
+/* 情况 C：已加入按钮 (悬浮时变红提示退出) */
+.btn-joined {
+  background-color: transparent !important;
+  color: var(--reddit-blue) !important;
+  border: 1px solid var(--reddit-blue) !important;
+}
+.btn-joined:hover {
+  background-color: #fff0f0 !important;
+  color: #ff4500 !important;
+  border-color: #ff4500 !important;
 }
 </style>
