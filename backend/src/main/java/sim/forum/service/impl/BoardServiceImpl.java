@@ -63,6 +63,7 @@ public class BoardServiceImpl implements BoardService {
         board.setDescription(dto.getDescription());
         board.setType(dto.getType());
         board.setCreator(creator);
+        board.setMemberCount(1);
         boardMapper.insert(board);
         board = isBoardNameUsed(dto.getName());
         // 更新社区的成员
