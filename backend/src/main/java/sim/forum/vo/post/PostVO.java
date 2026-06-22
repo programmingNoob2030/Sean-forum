@@ -19,4 +19,7 @@ public class PostVO extends Post {
 
     // 所在社区的封面
     private String boardCover;
+
+    // 所在社区的ID
+    private Long boardId;
 }

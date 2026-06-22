@@ -3,7 +3,7 @@
 <mapper namespace="sim.forum.mapper.PostMapper">
     <select id="getPostsWithRatingCondition">
         SELECT p.*, u.avatar AS creator_avatar,u.name AS creator_name, r.type AS post_rating_type,
-               b.name AS board_name, b.cover AS board_cover
+               b.name AS board_name, b.cover AS board_cover, b.id AS board_id
         FROM posts p
         LEFT JOIN users u
         ON p.creator = u.id

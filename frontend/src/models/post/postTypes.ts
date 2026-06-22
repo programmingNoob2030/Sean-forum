@@ -21,7 +21,8 @@ export type PostVO = Post & {postRatingType:number,
                              creatorName:string, 
                              boardName:string, 
                              boardCover:string,
-                             creatorAvatar:string};
+                             creatorAvatar:string
+                            boardId:number};
                              
 
 // 3. 创建帖子用的 DTO (剔除 ID 和系统生成的字段)
