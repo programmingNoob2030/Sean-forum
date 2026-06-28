@@ -3,6 +3,7 @@ package sim.forum.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import sim.forum.annotation.OptionalAuth;
 import sim.forum.context.UserContext;
 import sim.forum.dto.board.BoardDTO;
 import sim.forum.entity.Board;
@@ -58,6 +59,7 @@ public class BoardController {
     }
 
     @GetMapping("/boards")
+    @OptionalAuth
     public Result<List<SquareBoardVO>> getSquareBoards(){
         Long userId = UserContext.getUserId();
         List<SquareBoardVO> squareBoards = boardService.getSquareBoards(userId);
