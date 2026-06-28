@@ -4,8 +4,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import sim.forum.dto.PageRequestDTO;
 import sim.forum.dto.post.CreatePostDTO;
 import sim.forum.dto.post.DeletePostDTO;
+import sim.forum.dto.post.PostQueryDTO;
 import sim.forum.dto.post.RestorePostDTO;
-import sim.forum.entity.BrowseRecord;
 import sim.forum.entity.Post;
 import sim.forum.result.PageResult;
 import sim.forum.vo.post.PostVO;
@@ -21,7 +21,7 @@ public interface PostService {
 
     Post restorePost(RestorePostDTO dto);
 
-    PageResult<PostVO> getPosts(@RequestBody PageRequestDTO dto);
+    PageResult<PostVO> getPosts(@RequestBody PostQueryDTO dto);
 
     PostVO getPostById(Long userId, Long postId);
 

@@ -1,7 +1,7 @@
 import type { BoardDTO, BoardVO, BriefBoardVO, SquareBoardVO } from '@/models/board/boardTypes'
 import request from '@/utils/requests'
 import type { PageResult } from '@/models/pages'
-import { id } from 'element-plus/es/locale/index.mjs'
+import type { PostVO } from '@/models/post/postTypes'
 
 
 // 创建社区
@@ -26,6 +26,5 @@ export const apiGetSquareBoards = () => request.get<any, SquareBoardVO[]>('/boar
 
 // 获取最近浏览社区
 export const apiGetRecentBoards = () => request.get<any, BriefBoardVO[]>('/boards/history')
-
 
 

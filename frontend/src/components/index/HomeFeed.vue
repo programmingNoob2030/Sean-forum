@@ -14,8 +14,9 @@
         <el-pagination 
           background 
           layout="prev, pager, next, jumper" 
-          :total="postStore.total"
-          v-model:current-page="postStore.dto.pageNum"
+          :total="postStore.indexTotal"
+          :page-size="postStore.indexPostDTO.pageSize"
+          v-model:current-page="postStore.indexPostDTO.pageNum"
           @current-change="handlePageChange"
         />
       </div>
@@ -41,20 +42,28 @@ const searchQuery = ref('') // 可通过状态管理或父子组件传值同步
 
 const loadData = async () => {
   loading.value = true
-  await postStore.getPosts()
-  loading.value = false
+  try {
+    await postStore.getIndexPosts()
+  } finally {
+    loading.value = false
+  }
 }
 
 const filteredPosts = computed(() => {
-  return postStore.posts.filter(post => 
+  return postStore.indexPosts.filter(post => 
     post.title.toLowerCase().includes(searchQuery.value.toLowerCase()) && !post.isDeleted
   )
 })
 
 const goToDetail = (id: number) => router.push(`/post/${id}`)
-const handlePageChange = () => {
-  postStore.getPosts()
-  window.scrollTo(0, 0)
+const handlePageChange = async () => {
+  loading.value = true
+  try {
+    await postStore.getIndexPosts()
+    window.scrollTo(0, 0)
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => loadData())

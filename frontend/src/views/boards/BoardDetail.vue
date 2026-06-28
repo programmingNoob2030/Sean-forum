@@ -1,27 +1,48 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { apiGetBoardDetail } from '@/api/board'
 import type { BoardVO } from '@/models/board/boardTypes'
+import { usePostStore } from '@/models/post/postStore'
 import PostEdit from '@/components/post/PostEdit.vue'
 import BoardInfo from '@/components/board/BoardInfo.vue'
+import PostCard from '@/components/post/PostCard.vue'
 
 const route = useRoute()
+const router = useRouter()
+const postStore = usePostStore()
 const board = ref<BoardVO>()
 const loading = ref(true)
 const baseUrl = import.meta.env.VITE_RESOURCE_URL
 const postEditRef = ref()
+const boardId = computed(() => Number(route.params.id))
+
+const loadBoardPosts = async () => {
+  if (!boardId.value) return
+  await postStore.getBoardPosts(boardId.value)
+}
 
 onMounted(async () => {
-  const id = route.params.id
   loading.value = true
-  board.value = await apiGetBoardDetail(Number(id))
-  loading.value = false
+  try {
+    postStore.boardPosts = []
+    board.value = await apiGetBoardDetail(boardId.value)
+    postStore.boardPostDTO.pageNum = 1
+    await loadBoardPosts()
+  } finally {
+    loading.value = false
+  }
 })
 
-const handleRefresh = () => {
-  console.log('列表刷新中...')
+const handleRefresh = async () => {
+  await loadBoardPosts()
 }
+const handlePageChange = async () => {
+  await loadBoardPosts()
+  window.scrollTo(0, 0)
+}
+
+const goToDetail = (id: number) => router.push(`/post/${id}`)
 </script>
 
 <template>
@@ -60,7 +81,25 @@ const handleRefresh = () => {
 
     <div class="main-content">
       <div class="post-list-section">
-        <div class="temp-post-card">帖子列表加载中...</div>
+        <el-empty v-if="postStore.boardPosts.length === 0" description="No posts found" />
+        <div v-else class="post-list">
+          <PostCard
+            v-for="post in postStore.boardPosts"
+            :key="post.id"
+            :post="post"
+            @click-detail="goToDetail"
+          />
+        </div>
+        <div class="pagination-wrapper" v-if="postStore.boardTotal > postStore.boardPostDTO.pageSize">
+          <el-pagination
+            background
+            layout="prev, pager, next, jumper"
+            :total="postStore.boardTotal"
+            :page-size="postStore.boardPostDTO.pageSize"
+            v-model:current-page="postStore.boardPostDTO.pageNum"
+            @current-change="handlePageChange"
+          />
+        </div>
       </div>
       <BoardInfo :board-id="board.id" :baseUrl="baseUrl" />
     </div>
@@ -200,14 +239,15 @@ const handleRefresh = () => {
   gap: 24px;
 }
 
-.temp-post-card {
-  background: #ffffff;
-  height: 200px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
+.post-list {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pagination-wrapper {
+  display: flex;
   justify-content: center;
-  color: #7c7c7c;
+  margin: 30px 0;
 }
 </style>

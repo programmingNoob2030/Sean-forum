@@ -1,43 +1,65 @@
 import { defineStore } from "pinia";
-import type { RecentPostVO,  PostVO } from "./postTypes";
-import { ref } from 'vue'
+import { ref } from "vue";
 import { apiGetPosts, apiGetRecentPosts } from "@/api/post";
-import type { PageRequestDTO } from "../pages";
-export const usePostStore = defineStore('post', ()=>{
+import type { GetPostsDTO, PostVO, RecentPostVO } from "./postTypes";
 
-  const posts = ref<PostVO[]>([])
-  const total = ref(0)
-  const dto = ref<PageRequestDTO>({
+export const usePostStore = defineStore("post", () => {
+  const indexPosts = ref<PostVO[]>([]);
+  const boardPosts = ref<PostVO[]>([]);
+  const indexTotal = ref(0);
+  const boardTotal = ref(0);
+  const indexPostDTO = ref<GetPostsDTO>({
     pageNum: 1,
-    pageSize: 10
-  })
-  const recentPostList = ref<RecentPostVO[]>([])
-  const getPosts = async() => {
-    try{
-      if (dto.value){
-        const res = await apiGetPosts(dto.value)
-        posts.value = res.list
-        total.value = res.total
-      }
-    }catch(error){
-      console.log("获取帖子失败", error)
+    pageSize: 10,
+  });
+  const boardPostDTO = ref<GetPostsDTO>({
+    pageNum: 1,
+    pageSize: 10,
+    boardId: 0,
+  });
+  const recentPostList = ref<RecentPostVO[]>([]);
+
+  const getIndexPosts = async () => {
+    try {
+      const res = await apiGetPosts(indexPostDTO.value);
+      indexPosts.value = res.list;
+      indexTotal.value = res.total;
+    } catch (error) {
+      console.log("Failed to fetch posts", error);
     }
-  }
-  const getRecentPosts = async()=>{
-    try{
-      const res = await apiGetRecentPosts()
-      recentPostList.value = res
-    }catch(error){
-      console.log("获取帖子失败", error)
+  };
+
+  const getBoardPosts = async (boardId: number) => {
+    boardPostDTO.value.boardId = boardId;
+
+    try {
+      const res = await apiGetPosts(boardPostDTO.value);
+      boardPosts.value = res.list;
+      boardTotal.value = res.total;
+    } catch (error) {
+      console.log("Failed to fetch board posts", error);
     }
-  }
+  };
+
+  const getRecentPosts = async () => {
+    try {
+      const res = await apiGetRecentPosts();
+      recentPostList.value = res;
+    } catch (error) {
+      console.log("Failed to fetch recent posts", error);
+    }
+  };
+
   return {
-    dto,
-    total,
-    posts,
-    getPosts,
+    indexTotal,
+    indexPosts,
+    indexPostDTO,
+    getIndexPosts,
+    boardTotal,
+    boardPosts,
+    boardPostDTO,
+    getBoardPosts,
     recentPostList,
-    getRecentPosts
-    
-  }
-})
+    getRecentPosts,
+  };
+});

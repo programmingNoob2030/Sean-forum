@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import sim.forum.annotation.OptionalAuth;
 import sim.forum.context.UserContext;
-import sim.forum.dto.PageRequestDTO;
+import sim.forum.dto.post.PostQueryDTO;
 import sim.forum.entity.BrowseRecord;
 import sim.forum.result.PageResult;
 import sim.forum.result.Result;
@@ -59,7 +59,7 @@ public class PostController {
     }
     @GetMapping("/posts")
     @OptionalAuth
-    public Result<PageResult<PostVO>> getPosts(PageRequestDTO dto){
+    public Result<PageResult<PostVO>> getPosts(PostQueryDTO dto){
         PageResult<PostVO> posts = postService.getPosts(dto);
         return Result.success(posts);
     }

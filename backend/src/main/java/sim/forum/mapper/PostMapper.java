@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import sim.forum.dto.post.PostQueryDTO;
 import sim.forum.entity.Post;
 import sim.forum.vo.board.BriefBoardVO;
 import sim.forum.vo.post.PostVO;
@@ -20,7 +21,7 @@ public interface PostMapper extends BaseMapper<Post> {
     @Update("update posts set is_deleted = 0 where id = #{id}")
     void updateByIdIgnoreDeleted(Post post);
 
-    List<PostVO> getPostsWithRatingCondition(Long userId);
+    List<PostVO> getPosts(PostQueryDTO dto, Long userId);
 
     PostVO getPostWithRatingConditionById(Long userId, Long postId);
 

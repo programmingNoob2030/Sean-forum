@@ -14,6 +14,7 @@ import sim.forum.dto.PageRequestDTO;
 import sim.forum.dto.browserecord.CreateBrowseRecordDTO;
 import sim.forum.dto.post.CreatePostDTO;
 import sim.forum.dto.post.DeletePostDTO;
+import sim.forum.dto.post.PostQueryDTO;
 import sim.forum.dto.post.RestorePostDTO;
 import sim.forum.entity.BrowseRecord;
 import sim.forum.entity.Post;
@@ -109,13 +110,13 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PageResult<PostVO> getPosts(@RequestBody PageRequestDTO dto) {
+    public PageResult<PostVO> getPosts(@RequestBody PostQueryDTO dto) {
         int num = (dto.getPageNum() == null || dto.getPageNum() <= 0) ? 1 : dto.getPageNum();
         int size = (dto.getPageSize() == null || dto.getPageSize() <= 0) ? 10 : dto.getPageSize();
 
         // PageHelper分页操作必须紧扣查询语句上方
         PageHelper.startPage(num, size);
-        List<PostVO> list = postMapper.getPostsWithRatingCondition(UserContext.getUserId());
+        List<PostVO> list = postMapper.getPosts(dto, UserContext.getUserId());
         if (list == null || list.isEmpty()) throw new BusinessException("当前没有任何帖子!");
 
         // PageHelper 转换为 PageInfo

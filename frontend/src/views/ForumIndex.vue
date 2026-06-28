@@ -26,15 +26,18 @@ import { ref } from 'vue'
 import NavBar from '@/components/index/NavBar.vue'
 import LeftSideBar from '@/components/index/LeftSideBar.vue'
 import PostEdit from '@/components/post/PostEdit.vue'
+import { usePostStore } from '@/models/post/postStore'
 import { ElMessage } from 'element-plus'
 
 const searchQuery = ref('')
 const postEditRef = ref()
+const postStore = usePostStore()
 
 const handleCreatePost = () => postEditRef.value.open()
 // 刷新事件通知可以通过事件总线/状态管理或者简单地重载
 const handleRefresh = () => window.location.reload() 
-const onPostSuccess = () => {
+const onPostSuccess = async () => {
+  await postStore.getIndexPosts()
   ElMessage.success('发布成功')
 }
 </script>

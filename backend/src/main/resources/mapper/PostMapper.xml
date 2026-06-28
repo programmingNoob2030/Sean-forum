@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="sim.forum.mapper.PostMapper">
-    <select id="getPostsWithRatingCondition">
-        SELECT p.*, u.avatar AS creator_avatar,u.name AS creator_name, r.type AS post_rating_type,
-               b.name AS board_name, b.cover AS board_cover, b.id AS board_id
+    <select id="getPosts">
+        SELECT p.*,
+        u.avatar AS creator_avatar,
+        u.name AS creator_name,
+        r.type AS post_rating_type,
+        b.name AS board_name,
+        b.cover AS board_cover
         FROM posts p
         LEFT JOIN users u
         ON p.creator = u.id
@@ -13,6 +17,12 @@
         AND r.creator = #{userId}
         LEFT JOIN boards b
         ON p.board_id = b.id
+        <where>
+            <if test="dto.boardId != '' and dto.boardId != null">
+                p.board_id = #{dto.boardId}
+            </if>
+        </where>
+        ORDER BY p.create_time DESC
     </select>
 
     <select id="getPostWithRatingConditionById">
