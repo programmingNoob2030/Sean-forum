@@ -46,6 +46,7 @@ public class BoardController {
     }
 
     @GetMapping("/board/{id}")
+    @OptionalAuth
     public Result<Board> getBoardById(@PathVariable Long id){
         Long userId = UserContext.getUserId();
         Board board = boardService.getBoardDetail(id, userId);
