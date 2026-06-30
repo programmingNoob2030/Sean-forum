@@ -7,6 +7,7 @@ import { usePostStore } from '@/models/post/postStore'
 import PostEdit from '@/components/post/PostEdit.vue'
 import BoardInfo from '@/components/board/BoardInfo.vue'
 import PostCard from '@/components/post/PostCard.vue'
+import { ensureLogin } from '@/utils/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -45,16 +46,18 @@ const handlePageChange = async () => {
 }
 
 const handleMembership = async (action: 1 | -1) => {
-  if (!board.value || membershipLoading.value) return
-  membershipLoading.value = true
-  try {
-    const res = await apiToggleBoardMembership({ boardId: board.value.id, action })
-    board.value.currentUserRole = res.role ?? 'GUEST'
-    board.value.memberCount = res.memberCount
-    boardInfoRefreshKey.value++
-  } finally {
-    membershipLoading.value = false
-  }
+  ensureLogin(async()=>{
+    if (!board.value || membershipLoading.value) return
+    membershipLoading.value = true
+    try {
+      const res = await apiToggleBoardMembership({ boardId: board.value.id, action })
+      board.value.currentUserRole = res.role ?? 'GUEST'
+      board.value.memberCount = res.memberCount
+      boardInfoRefreshKey.value++
+    } finally {
+      membershipLoading.value = false
+    }
+  })
 }
 
 const goToDetail = (id: number) => router.push(`/post/${id}`)

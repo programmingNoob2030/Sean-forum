@@ -37,6 +37,7 @@ import { Loading } from '@element-plus/icons-vue';
 import BoardSquareItem from '@/components/board/BoardSquareItem.vue';
 import type { SquareBoardVO } from '@/models/board/boardTypes';
 import { apiGetSquareBoards, apiToggleBoardMembership } from '@/api/board';
+import { ensureLogin } from '@/utils/auth';
 
 const boards = ref<SquareBoardVO[]>([]);
 const loading = ref(false);
@@ -55,17 +56,19 @@ const fetchSquareData = async () => {
 };
 
 const handleMembership = async (id: number | string, action: 1 | -1) => {
-  const boardId = Number(id);
-  const target = boards.value.find(item => item.id === boardId);
-  try {
-    const res = await apiToggleBoardMembership({ boardId, action });
-    if (target) {
-      target.role = res.role;
-      target.memberCount = res.memberCount;
+  ensureLogin(async()=>{
+    const boardId = Number(id);
+    const target = boards.value.find(item => item.id === boardId);
+    try {
+      const res = await apiToggleBoardMembership({ boardId, action });
+      if (target) {
+        target.role = res.role;
+        target.memberCount = res.memberCount;
+      }
+    } catch (error) {
+      console.error("更新社区成员状态失败", error);
     }
-  } catch (error) {
-    console.error("更新社区成员状态失败", error);
-  }
+  })
 };
 
 onMounted(fetchSquareData);
