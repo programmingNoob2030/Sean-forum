@@ -39,7 +39,12 @@ watch(() => [props.boardId, props.refreshKey], ([newId]) => {
   fetchBoardDetail(Number(newId))
 })
 
-// 4. 辅助函数：将后端角色枚举转换为中文标签
+// 4. 辅助函数：将后端角色枚举转换为中文标签（同时用于绑定 class）
+const getRoleKey = (role: string) => {
+  const validRoles = ['CREATOR', 'ADMIN', 'MEMBER']
+  return validRoles.includes(role) ? role.toLowerCase() : 'visitor'
+}
+
 const getRoleLabel = (role: string) => {
   const map: Record<string, string> = {
     'CREATOR': '社区创建者',
@@ -61,9 +66,10 @@ const getRoleLabel = (role: string) => {
 
       <div class="card-body">
         
-        <div class="user-identity-tag" v-if="boardData.currentUserRole">
-          <span :class="['role-badge', boardData.currentUserRole.toLowerCase()]">
-            {{ getRoleLabel(boardData.currentUserRole) }}
+        <div class="user-identity-container" v-if="boardData.currentUserRole !== undefined">
+          <span class="identity-prefix">用户标识:</span>
+          <span :class="['role-badge', getRoleKey(boardData.currentUserRole || '')]">
+            {{ getRoleLabel(boardData.currentUserRole || '') }}
           </span>
         </div>
 
@@ -162,11 +168,22 @@ const getRoleLabel = (role: string) => {
   color: #7c7c7c;
 }
 
-/* 身份标识徽章 */
-.user-identity-tag {
+/* 身份标识容器 */
+.user-identity-container {
   margin-bottom: 12px;
+  display: flex;
+  align-items: center; /* 垂直居中 */
+  gap: 8px; /* 前缀和徽章之间的间距 */
 }
 
+/* 前缀样式，适配徽章的字体 */
+.identity-prefix {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1c1c1c; /* 使用默认的深色 */
+}
+
+/* 身份标识徽章 */
 .role-badge {
   font-size: 12px;
   padding: 2px 8px;
@@ -190,6 +207,13 @@ const getRoleLabel = (role: string) => {
   background-color: #f6f7f8;
   color: #7c7c7c;
   border: 1px solid #ccc;
+}
+
+/* 🌟 资深设计师补全：访客徽章专属样式，既保持一致性，又在色彩上做了低调降级 */
+.role-badge.visitor {
+  background-color: #fafafa;
+  color: #a8a8a8;
+  border: 1px solid #e0e0e0;
 }
 
 /* 创始人展示区域 */
