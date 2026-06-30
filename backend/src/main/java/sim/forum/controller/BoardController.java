@@ -6,11 +6,14 @@ import org.springframework.web.multipart.MultipartFile;
 import sim.forum.annotation.OptionalAuth;
 import sim.forum.context.UserContext;
 import sim.forum.dto.board.BoardDTO;
+import sim.forum.dto.board.BoardMemberDTO;
 import sim.forum.entity.Board;
 import sim.forum.entity.BrowseRecord;
 import sim.forum.result.Result;
+import sim.forum.service.BoardMemberService;
 import sim.forum.service.BoardService;
 import sim.forum.service.BrowseRecordService;
+import sim.forum.vo.board.BoardMembershipVO;
 import sim.forum.vo.board.BriefBoardVO;
 import sim.forum.vo.board.SquareBoardVO;
 
@@ -23,6 +26,10 @@ public class BoardController {
 
     @Autowired
     private BrowseRecordService browseRecordService;
+
+    @Autowired
+    private BoardMemberService boardMemberService;
+
     @PostMapping("/board/cover")
     public Result<String> uploadCover(@RequestParam("file") MultipartFile file) {
         // 1. 从 ThreadLocal/BaseContext 获取当前登录用户 ID
@@ -65,6 +72,13 @@ public class BoardController {
         Long userId = UserContext.getUserId();
         List<SquareBoardVO> squareBoards = boardService.getSquareBoards(userId);
         return Result.success(squareBoards);
+    }
+
+    @PutMapping("/board/membership")
+    public Result<BoardMembershipVO> toggleBoardMembership(@RequestBody BoardMemberDTO dto){
+        Long userId = UserContext.getUserId();
+        BoardMembershipVO vo = boardMemberService.handleMembership(dto, userId);
+        return Result.success(vo);
     }
 
     @GetMapping("/boards/history")

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="board-square-container">
     <header class="page-header">
       <h1 class="page-title">浏览社区</h1>
@@ -12,8 +12,8 @@
           v-for="item in boards" 
           :key="item.id" 
           :board="item"
-          @join="handleJoinRequest"
-          @leave=""
+          @join="(id) => handleMembership(id, 1)"
+          @leave="(id) => handleMembership(id, -1)"
           @manage=""
         />
       </div>
@@ -36,7 +36,7 @@ import { ref, onMounted } from 'vue';
 import { Loading } from '@element-plus/icons-vue';
 import BoardSquareItem from '@/components/board/BoardSquareItem.vue';
 import type { SquareBoardVO } from '@/models/board/boardTypes';
-import { apiGetSquareBoards } from '@/api/board';
+import { apiGetSquareBoards, apiToggleBoardMembership } from '@/api/board';
 
 const boards = ref<SquareBoardVO[]>([]);
 const loading = ref(false);
@@ -54,9 +54,18 @@ const fetchSquareData = async () => {
   }
 };
 
-const handleJoinRequest = (id: number | string) => {
-  console.log("用户点击加入，ID:", id);
-  // 这里写调用后端加入接口的逻辑
+const handleMembership = async (id: number | string, action: 1 | -1) => {
+  const boardId = Number(id);
+  const target = boards.value.find(item => item.id === boardId);
+  try {
+    const res = await apiToggleBoardMembership({ boardId, action });
+    if (target) {
+      target.role = res.role;
+      target.memberCount = res.memberCount;
+    }
+  } catch (error) {
+    console.error("更新社区成员状态失败", error);
+  }
 };
 
 onMounted(fetchSquareData);

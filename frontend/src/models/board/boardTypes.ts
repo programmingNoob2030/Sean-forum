@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 社区相关的类型定义 (相当于后端的 VO 和 DTO)
  */
 
@@ -15,6 +15,16 @@ export interface Board {
   createTime:Date;
 }
 type CommunityType = 'PUBLIC' | 'PRIVATE' | 'STRICT';
+export type BoardMemberRole = 'MEMBER' | 'ADMIN' | 'CREATOR';
+export type BoardMemberActionDTO = {
+  boardId: number;
+  action: 1 | -1;
+}
+export type BoardMembershipVO = {
+  boardId: number;
+  role: BoardMemberRole | null;
+  memberCount: number;
+}
 // 创建社区
 export type BoardDTO = Pick<Board, 'name' | 'cover'  | 'description'> & {type:CommunityType};
 
@@ -25,6 +35,6 @@ export type BoardVO = Board & {currentUserRole:string, creatorName:string, creat
 export type BriefBoardVO = Pick<Board, 'id' | 'name' | 'cover'>
 
 // 广场的社区信息
-export type SquareBoardVO = Pick<Board, 'id' | 'name' | 'cover' | 'description'> & {weeklyVisitor:number, role:string}
+export type SquareBoardVO = Pick<Board, 'id' | 'name' | 'cover' | 'description' | 'memberCount'> & {weeklyVisitor:number, role:BoardMemberRole | null}
 
 

@@ -13,6 +13,7 @@ import sim.forum.entity.Board;
 import sim.forum.entity.BoardMember;
 import sim.forum.entity.BrowseRecord;
 import sim.forum.entity.User;
+import sim.forum.event.board.ToggleBoardMemberEvent;
 import sim.forum.event.post.PostCreateEvent;
 import sim.forum.exception.BusinessException;
 import sim.forum.mapper.BoardMapper;
@@ -55,7 +56,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public Board createBoard(BoardDTO dto, Long creator) {
         Board board = isBoardNameUsed(dto.getName());
-        if (board != null) throw new BusinessException("社区名字已存在!");
+        if (board != null) throw new BusinessException("社区名字已存�?");
         board = new Board();
         // 创建社区
         board.setName(dto.getName());
@@ -66,7 +67,7 @@ public class BoardServiceImpl implements BoardService {
         board.setMemberCount(1);
         boardMapper.insert(board);
         board = isBoardNameUsed(dto.getName());
-        // 更新社区的成员
+        // 更新社区的成�?
         BoardMember member = new BoardMember();
         member.setBoardId(board.getId());
         member.setMemberId(creator);
@@ -95,7 +96,7 @@ public class BoardServiceImpl implements BoardService {
     public BoardVO getBoardDetail(Long id, Long userId) {
         BoardVO boardVO = boardMapper.getBoardDetail(id, userId);
         if (boardVO == null) {
-            throw new BusinessException("目标社区不存在!");
+            throw new BusinessException("目标社区不存�?");
         }
         if (boardVO.getCurrentUserRole() == null) boardVO.setCurrentUserRole("GUEST");
         CreateBrowseRecordDTO dto = new CreateBrowseRecordDTO();
@@ -116,18 +117,20 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public List<BriefBoardVO> getRecentBoards(List<Long> ids, Long userId) {
-        if (userId == null) throw new BusinessException("此用户信息有误,无法查询!");
+        if (userId == null) throw new BusinessException("此用户信息有�?无法查询!");
         return boardMapper.getRecentBoards(ids, userId);
     }
 
     @Override
     public List<SquareBoardVO> getSquareBoards(Long userId) {
-        List<BoardMember> boardMembers = boardMemberService.getBoardsByMemberId(userId);
+        List<BoardMember> boardMembers = userId == null
+                ? new ArrayList<>()
+                : boardMemberService.getBoardsByMemberId(userId);
         List<Board> boards = boardMapper.selectList(null);
-        // 空间换时间
+        // 空间换时�?
         Map<Long,BoardMember> boardMembersMap = boardMembers
                 .stream()
-                .collect(Collectors.toMap(BoardMember::getId, boardMember -> boardMember));
+                .collect(Collectors.toMap(BoardMember::getBoardId, boardMember -> boardMember));
 
         List<SquareBoardVO> squareBoards = new ArrayList<>();
         // 遍历
@@ -150,5 +153,11 @@ public class BoardServiceImpl implements BoardService {
     public void addPostCount(PostCreateEvent event) {
         countService.updateAtomicCount(boardMapper, event.boardId(),
                 "post_count", 1,true);
+    }
+
+    @EventListener
+    public void updateBoardMemberCount(ToggleBoardMemberEvent event) {
+        countService.updateAtomicCount(boardMapper, event.boardId(),
+                "member_count", Math.abs(event.delta()), event.delta() > 0);
     }
 }

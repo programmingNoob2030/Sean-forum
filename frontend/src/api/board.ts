@@ -1,4 +1,4 @@
-import type { BoardDTO, BoardVO, BriefBoardVO, SquareBoardVO } from '@/models/board/boardTypes'
+import type { BoardDTO, BoardMemberActionDTO, BoardMembershipVO, BoardVO, BriefBoardVO, SquareBoardVO } from '@/models/board/boardTypes'
 import request from '@/utils/requests'
 import type { PageResult } from '@/models/pages'
 import type { PostVO } from '@/models/post/postTypes'
@@ -17,6 +17,8 @@ export const apiGetMyBoards = () => request.get<any, BriefBoardVO[]>('/boards/mi
 
 // 获取社区详情
 export const apiGetBoardDetail = (id:number) => request.get<any, BoardVO>(`/board/${id}`)
+
+export const apiToggleBoardMembership = (dto: BoardMemberActionDTO) => request.put<any, BoardMembershipVO>('/board/membership', dto)
 
 // 搜索社区
 export const apiSearchBoard = (keyword:string) => request.get<any, BriefBoardVO[]>('/board/search', {params:{keyword:keyword}})

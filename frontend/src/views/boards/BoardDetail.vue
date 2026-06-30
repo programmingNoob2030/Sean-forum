@@ -1,7 +1,7 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { apiGetBoardDetail } from '@/api/board'
+import { apiGetBoardDetail, apiToggleBoardMembership } from '@/api/board'
 import type { BoardVO } from '@/models/board/boardTypes'
 import { usePostStore } from '@/models/post/postStore'
 import PostEdit from '@/components/post/PostEdit.vue'
@@ -13,6 +13,8 @@ const router = useRouter()
 const postStore = usePostStore()
 const board = ref<BoardVO>()
 const loading = ref(true)
+const membershipLoading = ref(false)
+const boardInfoRefreshKey = ref(0)
 const baseUrl = import.meta.env.VITE_RESOURCE_URL
 const postEditRef = ref()
 const boardId = computed(() => Number(route.params.id))
@@ -42,6 +44,19 @@ const handlePageChange = async () => {
   window.scrollTo(0, 0)
 }
 
+const handleMembership = async (action: 1 | -1) => {
+  if (!board.value || membershipLoading.value) return
+  membershipLoading.value = true
+  try {
+    const res = await apiToggleBoardMembership({ boardId: board.value.id, action })
+    board.value.currentUserRole = res.role ?? 'GUEST'
+    board.value.memberCount = res.memberCount
+    boardInfoRefreshKey.value++
+  } finally {
+    membershipLoading.value = false
+  }
+}
+
 const goToDetail = (id: number) => router.push(`/post/${id}`)
 </script>
 
@@ -68,10 +83,10 @@ const goToDetail = (id: number) => router.push(`/post/${id}`)
           <button v-if="board.currentUserRole === 'CREATOR' || board.currentUserRole === 'ADMIN'" class="btn-manage">
             ⚙️ 管理社区
           </button>
-          <button v-else-if="board.currentUserRole === 'MEMBER'" class="btn-joined">
+          <button v-else-if="board.currentUserRole === 'MEMBER'" class="btn-joined" :disabled="membershipLoading" @click="handleMembership(-1)">
             已加入
           </button>
-          <button v-else class="btn-join">
+          <button v-else class="btn-join" :disabled="membershipLoading" @click="handleMembership(1)">
             加入
           </button>
         </div>
@@ -101,7 +116,7 @@ const goToDetail = (id: number) => router.push(`/post/${id}`)
           />
         </div>
       </div>
-      <BoardInfo :board-id="board.id" :baseUrl="baseUrl" />
+      <BoardInfo :board-id="board.id" :baseUrl="baseUrl" :refresh-key="boardInfoRefreshKey" />
     </div>
   </div>
 </template>
@@ -190,6 +205,11 @@ const goToDetail = (id: number) => router.push(`/post/${id}`)
   cursor: pointer;
   border: none;
   transition: all 0.2s ease;
+}
+
+.action-right button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btn-outline {

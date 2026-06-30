@@ -8,16 +8,18 @@ public class SquareBoardVO {
     // 社区的ID
     private Long id;
 
-    // 社区的名称
+    // 社区的名�?
     private String name;
 
-    // 社区的封面
+    // 社区的封�?
     private String cover;
 
-    // 社区的描述
+    // 社区的描�?
     private String description;
 
-    // 社区的周访客量
+    private Integer memberCount;
+
+    // 社区的周访客�?
     private Long weeklyVisitor;
 
     // 当前用户和展示社区的关系

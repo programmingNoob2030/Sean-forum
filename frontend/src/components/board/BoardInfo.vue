@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { apiGetBoardDetail } from '@/api/board' 
 import type { BoardVO } from '@/models/board/boardTypes' 
@@ -7,8 +7,10 @@ import type { BoardVO } from '@/models/board/boardTypes'
 const props = withDefaults(defineProps<{
   boardId: number
   baseUrl?: string
+  refreshKey?: number
 }>(), {
-  baseUrl: ''
+  baseUrl: '',
+  refreshKey: 0
 })
 
 const boardData = ref<BoardVO | null>(null)
@@ -33,8 +35,8 @@ onMounted(() => {
 })
 
 // 监听 boardId 变化，防止在社区详情页之间连续跳转时组件不刷新
-watch(() => props.boardId, (newId) => {
-  fetchBoardDetail(newId)
+watch(() => [props.boardId, props.refreshKey], ([newId]) => {
+  fetchBoardDetail(Number(newId))
 })
 
 // 4. 辅助函数：将后端角色枚举转换为中文标签
