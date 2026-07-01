@@ -8,6 +8,7 @@
           :key="post.id" 
           :post="post"
           @click-detail="goToDetail"
+          @refresh="loadData"
         />
       </div>
       <div class="pagination-wrapper">

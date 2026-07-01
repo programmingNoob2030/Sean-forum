@@ -45,21 +45,33 @@
           <el-icon><Share /></el-icon>
           <span>Share</span>
         </div>
+
+        <div 
+          v-if= "post.creatorName === userStore.userInfo?.name" 
+          class="action-btn delete-btn" 
+          @click.stop="handleDeletePost"
+        >
+          <el-icon><Delete /></el-icon>
+          <span>删除</span>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { CaretTop, CaretBottom, ChatDotRound, Share } from '@element-plus/icons-vue'
+import { CaretTop, CaretBottom, ChatDotRound, Share, Delete } from '@element-plus/icons-vue'
 import type { PostVO } from '@/models/post/postTypes'
 import { formatPostTime } from '@/utils/timeFormat';
 import { computed } from 'vue';
 import { useRatingStore } from '@/models/rating/ratingStore';
 import { ref } from 'vue'
 import type { RatingDTO } from '@/models/rating/ratingTypes';
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox} from 'element-plus';
 import { ensureLogin } from '@/utils/auth';
+import { apiDeletePost } from '@/api/post';
+import { useUserStore } from '@/models/user/userStore';
+
 const baseUrl = import.meta.env.VITE_RESOURCE_URL
 const ratingForm = ref<RatingDTO>({
   target:'',
@@ -71,6 +83,7 @@ const props = defineProps<{
   post: PostVO
 }>()
 const ratingSotre = useRatingStore()
+const userStore = useUserStore()
 const doRatingUp = async()=>{
   ratingForm.value.action = 1
   ratingForm.value.target = 'POST'
@@ -101,11 +114,34 @@ const doRatingDown = async()=>{
   
 }
 // 2. 定义向外发送的事件 (Emits)
-defineEmits(['click-detail'])
+const emit = defineEmits(['click-detail', 'refresh'])
 // 使用计算属性，不仅逻辑清晰，而且性能好
 const displayTime = computed(() => {
   return formatPostTime(props.post.createTime);
 });
+const handleDeletePost = () => {
+  ElMessageBox.confirm(
+    '确定要永久删除这篇帖子吗？此操作执行逻辑删除。',
+    '提示',
+    {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+    }
+  ).then(async () => {
+    try {
+      // 这里的 props.post.id 就是当前帖子的 ID
+      await apiDeletePost({ id: props.post.id })
+      ElMessage.success('帖子删除成功!')
+      // 通知父组件刷新列表，让帖子瞬间隐身
+      emit('refresh')
+    } catch (error) {
+      console.error(error)
+    }
+  }).catch(() => {
+    // 点击取消，啥也不做
+  })
+}
 </script>
 
 <style scoped>
@@ -244,6 +280,12 @@ const displayTime = computed(() => {
 /* 按钮悬停效果 */
 .action-btn:hover {
   background-color: #f6f7f8;
+}
+
+/* 删除按钮独有的悬停危险红 */
+.delete-btn:hover {
+  background-color: #ffe6e6 !important;
+  color: #ff4d4d !important;
 }
 
 .action-btn .el-icon {

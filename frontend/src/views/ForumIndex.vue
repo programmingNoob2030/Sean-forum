@@ -38,7 +38,6 @@ const handleCreatePost = () => postEditRef.value.open()
 const handleRefresh = () => window.location.reload() 
 const onPostSuccess = async () => {
   await postStore.getIndexPosts()
-  ElMessage.success('发布成功')
 }
 </script>
 

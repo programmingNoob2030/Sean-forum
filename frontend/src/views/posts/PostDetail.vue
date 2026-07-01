@@ -1,5 +1,5 @@
 <template>
-  <div v-if="post" class="post-detail-container" v-loading="loading">
+  <div v-if="post && isVisible" class="post-detail-container" v-loading="loading">
     
     <div class="main-content">
       
@@ -34,6 +34,15 @@
             
             <el-button class="text-action-btn" link>
               <el-icon><Share /></el-icon> 分享
+            </el-button>
+
+            <el-button 
+              v-if="post.creatorName === userStore.userInfo?.name" 
+              class="text-action-btn delete-btn" 
+              link
+              @click="handleDeletePostDetail"
+            >
+              <el-icon><Delete /></el-icon> 删除
             </el-button>
           </div>
         </article>
@@ -90,27 +99,33 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router' 
 import { useRatingStore } from '@/models/rating/ratingStore'
-import { apiGetPostById } from '@/api/post'
+import { apiGetPostById, apiDeletePost } from '@/api/post' 
+import { useUserStore } from '@/models/user/userStore' 
 import type { PostVO } from '@/models/post/postTypes'
 import { formatPostTime } from '@/utils/timeFormat';
-import { CaretTop, CaretBottom, Share } from '@element-plus/icons-vue'
+import { CaretTop, CaretBottom, Share, Delete } from '@element-plus/icons-vue'
 import CommentCard from '@/components/comment/CommentCard.vue'
 import BoardInfo from '@/components/board/BoardInfo.vue'
 import { useCommentStore } from '@/models/comment/commentStore'
-import type { GetPostCommentsDTO } from '@/models/pages'
+import type { GetPostCommentsDTO} from '@/models/pages'
 import { ensureLogin } from '@/utils/auth'
-import { ElMessage } from 'element-plus'
 import { apiCreateComment } from '@/api/comment'
+import { ElMessage, ElMessageBox } from 'element-plus' 
 
 const baseUrl = import.meta.env.VITE_RESOURCE_URL
 const commentStore = useCommentStore()
+const userStore = useUserStore() 
 const route = useRoute()
+const router = useRouter() 
 const ratingStore = useRatingStore()
 const loading = ref(true)
 const post = ref<PostVO>()
 const postId = route.params.id
+
+// 🌟 核心状态：页面级视觉隐身控制器
+const isVisible = ref(true)
 
 const dto = ref<GetPostCommentsDTO>({
   postId: Number(postId),
@@ -120,10 +135,32 @@ const dto = ref<GetPostCommentsDTO>({
 const mainCommentContent = ref('')
 const submitting = ref(false)
 
+// 🌟 新增：最精简的详情页逻辑删除函数
+const handleDeletePostDetail = () => {
+  ElMessageBox.confirm('确定要将这篇帖子彻底下架吗？', '提示', {
+    confirmButtonText: '确定下架',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async () => {
+    try {
+      loading.value = true
+      await apiDeletePost({ id: Number(postId) })
+      ElMessage.success('帖子已成功下架!')
+      
+      isVisible.value = false // 物理隐身
+      router.back() // 啪，直接秒退回列表页，不留一点脏数据痕迹
+    } catch (error) {
+      console.error(error)
+    } finally {
+      loading.value = false
+    }
+  }).catch(() => {})
+}
+
 const submitComment = async () => {
   const content = mainCommentContent.value
   if (!content?.trim()) return ElMessage.warning('内容不能为空')
-  
+
   ensureLogin(async () => {
     submitting.value = true
     try {
@@ -138,7 +175,6 @@ const submitComment = async () => {
       await apiCreateComment(commentDTO)
       await getPostDetail()
       await commentStore.getCommentsByPostId()
-      ElMessage.success("评论发布成功!")
     } finally {
       mainCommentContent.value = ''
       submitting.value = false
@@ -308,12 +344,17 @@ onMounted(() => {
 }
 
 /* ==========================================================================
-   4. 底部操作动作条 & 投票胶囊
+   4. 底部操作动作条 & 投票胶囊 & 危险红悬停样式
    ========================================================================== */
 .action-bar {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+.delete-btn:hover {
+  background-color: #ffe6e6 !important;
+  color: #ff4d4d !important;
 }
 
 .vote-capsule {
