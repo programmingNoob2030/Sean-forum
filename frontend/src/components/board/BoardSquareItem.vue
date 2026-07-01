@@ -72,7 +72,10 @@ const handleNavigate = () => {
 
 const onJoin = () => { emit('join', props.board.id); };
 const onLeave = () => { emit('leave', props.board.id); };
-const onManage = () => { emit('manage', props.board.id); };
+const onManage = () => {
+  emit('manage', props.board.id);
+  router.push(`/board/${props.board.id}/admin`);
+};
 </script>
 
 <style scoped>

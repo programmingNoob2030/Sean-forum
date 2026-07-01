@@ -109,6 +109,59 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
+    public BoardVO updateBoard(Long id, Board board, Long operatorId) {
+        if (operatorId == null) {
+            throw new BusinessException("User not logged in");
+        }
+        if (id == null || board == null) {
+            throw new BusinessException("Board info is empty");
+        }
+
+        Board current = boardMapper.selectById(id);
+        if (current == null) {
+            throw new BusinessException("Board does not exist");
+        }
+        if (!canManageBoard(current, operatorId)) {
+            throw new BusinessException("No board management permission");
+        }
+
+        String name = board.getName() == null ? "" : board.getName().trim();
+        if (name.isEmpty()) {
+            throw new BusinessException("Board name is empty");
+        }
+        if (board.getType() == null) {
+            throw new BusinessException("Board type is empty");
+        }
+
+        Board sameName = isBoardNameUsed(name);
+        if (sameName != null && !id.equals(sameName.getId())) {
+            throw new BusinessException("Board name is already used");
+        }
+
+        Board update = new Board();
+        update.setId(id);
+        update.setName(name);
+        update.setCover(board.getCover());
+        update.setType(board.getType());
+        update.setDescription(board.getDescription());
+        update.setBanner(board.getBanner());
+        boardMapper.updateById(update);
+
+        return getBoardDetail(id, operatorId);
+    }
+
+    private boolean canManageBoard(Board board, Long userId) {
+        if (board.getCreator() != null && board.getCreator().equals(userId)) {
+            return true;
+        }
+        BoardMember member = boardMemberService.getUserBoard(board.getId(), userId);
+        if (member == null || member.getRole() == null) {
+            return false;
+        }
+        return member.getRole() == BoardMember.RoleType.CREATOR
+                || member.getRole() == BoardMember.RoleType.ADMIN;
+    }
+    @Override
     public List<BriefBoardVO> searchBoardsByKeyword(String keyword) {
         List<BriefBoardVO> list = boardMapper.searchBoardsByKeyword(keyword);
         if (list == null) return new ArrayList<>();

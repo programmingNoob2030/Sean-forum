@@ -46,6 +46,12 @@ const routes = [
     props: true
   },
   {
+    path: '/board/:id/admin',
+    name: 'BoardAdmin',
+    component: ()=>import('@/views/boards/BoardAdmin.vue'),
+    props: true
+  },
+  {
     path: '/board/:id',
     name: 'BoardDetail',
     component: ()=>import('@/views/boards/BoardDetail.vue'), // 访问 http://localhost:5173/admin/posts 进入管理页
@@ -58,11 +64,18 @@ const routes = [
     props: true
   },
   {
+    path: '/board-manage',
+    name: 'BoardManage',
+    component: ()=>import('@/views/boards/BoardManage.vue'), // 访问 http://localhost:5173/admin/posts 进入管理页
+    props: true
+  },
+  {
     path: '/message-detail',
     name: 'MessageDetail',
     component: ()=>import('@/views/messages/MessageDetail.vue'), // 访问 http://localhost:5173/admin/posts 进入管理页
     props: true
-  }
+  },
+  
 ]
 
 const router = createRouter({

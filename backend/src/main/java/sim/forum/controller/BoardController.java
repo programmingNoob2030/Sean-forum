@@ -14,6 +14,7 @@ import sim.forum.service.BoardMemberService;
 import sim.forum.service.BoardService;
 import sim.forum.service.BrowseRecordService;
 import sim.forum.vo.board.BoardMembershipVO;
+import sim.forum.vo.board.BoardVO;
 import sim.forum.vo.board.BriefBoardVO;
 import sim.forum.vo.board.SquareBoardVO;
 
@@ -30,7 +31,7 @@ public class BoardController {
     @Autowired
     private BoardMemberService boardMemberService;
 
-    @PostMapping("/board/cover")
+    @PostMapping({"/boards/images", "/board/cover"})
     public Result<String> uploadCover(@RequestParam("file") MultipartFile file) {
         // 1. 从 ThreadLocal/BaseContext 获取当前登录用户 ID
         // 假设你的拦截器已经把解析好的 JWT ID 放进去了
@@ -52,12 +53,19 @@ public class BoardController {
         return Result.success(list);
     }
 
-    @GetMapping("/board/{id}")
+    @GetMapping({"/boards/{id}", "/board/{id}"})
     @OptionalAuth
-    public Result<Board> getBoardById(@PathVariable Long id){
+    public Result<BoardVO> getBoardById(@PathVariable Long id){
         Long userId = UserContext.getUserId();
-        Board board = boardService.getBoardDetail(id, userId);
+        BoardVO board = boardService.getBoardDetail(id, userId);
         return Result.success(board);
+    }
+
+    @PutMapping("/boards/{id}")
+    public Result<BoardVO> updateBoard(@PathVariable Long id, @RequestBody Board board){
+        Long userId = UserContext.getUserId();
+        BoardVO updated = boardService.updateBoard(id, board, userId);
+        return Result.success(updated);
     }
 
     @GetMapping("/board/search")

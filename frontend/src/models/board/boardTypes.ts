@@ -14,7 +14,7 @@ export interface Board {
   memberCount:number;
   createTime:Date;
 }
-type CommunityType = 'PUBLIC' | 'PRIVATE' | 'STRICT';
+export type CommunityType = 'PUBLIC' | 'PRIVATE' | 'STRICT';
 export type BoardMemberRole = 'MEMBER' | 'ADMIN' | 'CREATOR';
 export type BoardMemberActionDTO = {
   boardId: number;
@@ -27,6 +27,7 @@ export type BoardMembershipVO = {
 }
 // 创建社区
 export type BoardDTO = Pick<Board, 'name' | 'cover'  | 'description'> & {type:CommunityType};
+export type BoardUpdateDTO = Pick<Board, 'name' | 'cover' | 'description' | 'banner'> & {type:CommunityType};
 
 // 完整的社区信息
 export type BoardVO = Board & {currentUserRole:string, creatorName:string, creatorAvatar:string};

@@ -37,7 +37,7 @@
       </div>
 
       <div v-show="isCommunityOpen" class="sub-menu">
-        <div class="menu-item sub-item"><el-icon><Setting /></el-icon> 管理社区</div>
+        <div class="menu-item sub-item" @click="goToManage"><el-icon><Setting /></el-icon> 管理社区</div>
         <div class="my-boards-section">
           <BriefBoardItem 
             v-for="board in boardStore.briefBoardList" 
@@ -84,6 +84,12 @@ watch(() => userStore.token, async (newId) => {
 }, { immediate: true })
 const goToBoardSquare = () =>{
   router.push("/board-square")
+}
+const goToManage = () => {
+  // 顺畅跳转，顺便把参数带过去
+  router.push({
+    name: 'BoardManage', // 或者是你的路由 path: `/board/manage/${currentId}`
+  })
 }
 </script>
 

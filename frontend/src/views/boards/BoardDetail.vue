@@ -61,6 +61,11 @@ const handleMembership = async (action: 1 | -1) => {
 }
 
 const goToDetail = (id: number) => router.push(`/post/${id}`)
+const goToBoardAdmin = () => {
+  if (boardId.value) {
+    router.push(`/board/${boardId.value}/admin`)
+  }
+}
 </script>
 
 <template>
@@ -83,7 +88,11 @@ const goToDetail = (id: number) => router.push(`/post/${id}`)
         <div class="action-right">
           <button class="btn-outline" @click="postEditRef.open(board.id, board.name, board.cover)">+ 创建帖子</button>
           
-          <button v-if="board.currentUserRole === 'CREATOR' || board.currentUserRole === 'ADMIN'" class="btn-manage">
+          <button
+            v-if="board.currentUserRole === 'CREATOR' || board.currentUserRole === 'ADMIN'"
+            class="btn-manage"
+            @click="goToBoardAdmin"
+          >
             ⚙️ 管理社区
           </button>
           <button v-else-if="board.currentUserRole === 'MEMBER'" class="btn-joined" :disabled="membershipLoading" @click="handleMembership(-1)">

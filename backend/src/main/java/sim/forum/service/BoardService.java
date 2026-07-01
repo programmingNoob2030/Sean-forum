@@ -18,6 +18,8 @@ public interface BoardService {
 
     BoardVO getBoardDetail(Long id, Long userId);
 
+    BoardVO updateBoard(Long id, Board board, Long operatorId);
+
     List<BriefBoardVO> searchBoardsByKeyword(String keyword);
 
     List<SquareBoardVO> getSquareBoards(Long userId);
