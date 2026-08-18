@@ -22,7 +22,7 @@ public class RatingServiceTest {
         dto.setTargetId(20L);
 
         // 是否执行操作
-        Rating rating = ratingService.handleVote(dto);
+        Rating rating = ratingService.handleVote(dto, UserContext.getUserId());
         Assertions.assertNotNull(rating);
 
         // 是否创建成功

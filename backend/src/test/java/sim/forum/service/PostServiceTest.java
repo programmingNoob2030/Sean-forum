@@ -30,7 +30,7 @@ public class PostServiceTest {
             dto.setTitle("test title" + i);
             dto.setContent("test content" + i);
             // 是否执行操作
-            Post post = postService.createPost(dto);
+            Post post = postService.createPost(dto, UserContext.getUserId());
             Assertions.assertNotNull(post);
 
             // 是否创建成功

@@ -22,11 +22,10 @@ public class CommentServiceTest {
         UserContext.setUserId(11L);
         dto.setContent("This is a comment for post No.20.");
         dto.setTarget(Comment.CommentTarget.POST);
-        dto.setTargetId(20L);
 
 
         // 是否执行操作
-        Comment comment = commentService.createComment(dto);
+        Comment comment = commentService.createComment(dto, UserContext.getUserId());
         Assertions.assertNotNull(comment);
 
         // 是否创建成功
