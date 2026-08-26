@@ -6,16 +6,31 @@
 **/bin/
 **/out/
 **/application.yaml
+**/application-*.yaml
+!**/application.yaml.example
+!**/application-*.yaml.example
 
 # --- 前端 (Vue 3) ---
 **/node_modules/
 **/dist/
 **/.env.local
+**/.env.*.local
 **/.vscode/
 **/.history/
 **/.cache/
+**/.pnpm-store/
 **/dist-ssr/
 **/*.local
+**/*.tsbuildinfo
+**/.vite/
+**/coverage/
+
+# --- 临时文件与日志 ---
+**/*.tmp
+**/*.temp
+**/*.log
+**/~*
+
 # --- 系统文件 ---
 .DS_Store
 Thumbs.db
