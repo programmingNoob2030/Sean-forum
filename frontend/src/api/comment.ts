@@ -14,3 +14,7 @@ export const apiCreateComment = (dto: CommentDTO) => {
   
   return request.post<any,CommentVO>('/comments',  dto)
 }
+
+// 3、删除评论
+export const apiDeleteComment = (dto: DeleteCommentDTO) => request.delete('/comments', {data: dto})
+

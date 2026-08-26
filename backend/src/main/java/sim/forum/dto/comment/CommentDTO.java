@@ -1,5 +1,6 @@
 package sim.forum.dto.comment;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import sim.forum.entity.Comment;
 
@@ -13,6 +14,7 @@ public class CommentDTO {
     private Long targetId;
 
     // 评论的内容
+    @NotBlank(message = "评论内容不能为空")
     private String content;
 
     // 评论的资源的ID

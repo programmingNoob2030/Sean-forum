@@ -37,6 +37,7 @@ import java.util.*;
 @Slf4j
 @Service
 public class CommentServiceImpl implements CommentService {
+
     @Autowired
     private CommentMapper commentMapper;
     @Autowired
@@ -49,6 +50,8 @@ public class CommentServiceImpl implements CommentService {
     private MessageService messageService;
     @Override
     public Comment createComment(CommentDTO dto, Long userId) {
+        validateCommentContent(dto.getContent());
+
         Comment comment = new Comment();
         BeanUtils.copyProperties(dto, comment);
         comment.setCreator(userId);
@@ -166,5 +169,11 @@ public class CommentServiceImpl implements CommentService {
     public void updatePostLikeCount(ToggleRatingEvent event) {
         countService.updateAtomicCount(commentMapper, event.targetId(),
                 "like_count", event.delta(), true);
+    }
+
+    private void validateCommentContent(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new BusinessException("评论内容不能为空");
+        }
     }
 }
