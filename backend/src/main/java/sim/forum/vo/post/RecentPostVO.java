@@ -1,6 +1,8 @@
 package sim.forum.vo.post;
 
 import lombok.Data;
+import sim.forum.dto.post.content.PostContentFormat;
+
 import java.util.Date;
 
 @Data
@@ -20,6 +22,21 @@ public class RecentPostVO {
      * 帖子内容摘要
      */
     private String content;
+
+    /**
+     * 正文格式
+     */
+    private PostContentFormat contentFormat;
+
+    /**
+     * 正文文本预览
+     */
+    private String contentTextPreview;
+
+    /**
+     * 第一张图片路径
+     */
+    private String firstImagePath;
 
     /**
      * 点赞数

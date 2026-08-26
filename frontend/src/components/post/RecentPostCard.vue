@@ -19,6 +19,13 @@
       <!-- 标题：限制显示行数 -->
       <h4 class="item-title">{{ post.title }}</h4>
 
+      <div
+        v-if="summaryView.textPreview"
+        class="item-summary"
+      >
+        <div class="summary-text">{{ summaryView.textPreview }}</div>
+      </div>
+
       <!-- 底部数据：点赞与评论 -->
       <div class="item-footer">
         <span class="footer-data">{{ post.likeCount || 0 }} 评分</span>
@@ -27,31 +34,50 @@
       </div>
     </div>
 
-    <!-- 右侧缩略图：参考图2的样式 -->
-    <div class="item-media" v-if="post.boardCover">
-      <el-image 
-        :src="baseUrl + post.boardCover" 
+    <!-- 右侧缩略图：优先使用正文首图 -->
+    <div class="item-media" v-if="summaryView.firstImagePath && !imageLoadFailed">
+      <el-image
+        :src="resolveImageSrc(summaryView.firstImagePath)"
         fit="cover"
         class="media-img"
+        loading="lazy"
+        @error="handleImageError"
       />
-    </div>
-    <div class="item-media placeholder" v-else>
-      <el-icon><Picture /></el-icon>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Picture } from '@element-plus/icons-vue';
+import { computed, ref } from 'vue';
 import { formatPostTime } from '@/utils/timeFormat';
 import type { RecentPostVO } from '@/models/post/postTypes';
+import { resolvePostContentView } from '@/utils/postContent'
 
 const props = defineProps<{ post: RecentPostVO }>();
-const baseUrl = import.meta.env.VITE_RESOURCE_URL;
 defineEmits(['click-detail']);
+const baseUrl = import.meta.env.VITE_RESOURCE_URL;
+const imageLoadFailed = ref(false)
 
 const displayTime = computed(() => formatPostTime(props.post.createTime));
+
+const summaryView = computed(() => resolvePostContentView(
+  props.post.content,
+  props.post.contentFormat,
+  props.post.contentNodes,
+  props.post.contentTextPreview,
+  props.post.firstImagePath,
+))
+
+const resolveImageSrc = (path: string) => {
+  if (/^(https?:)?\/\//i.test(path) || path.startsWith('data:')) {
+    return path
+  }
+  return `${baseUrl}${path}`
+}
+
+const handleImageError = () => {
+  imageLoadFailed.value = true
+}
 </script>
 
 <style scoped>
@@ -119,6 +145,20 @@ const displayTime = computed(() => formatPostTime(props.post.createTime));
   word-break: break-word;
 }
 
+.item-summary {
+  margin-bottom: 8px;
+}
+
+.summary-text {
+  font-size: 12px;
+  color: #4f4f4f;
+  line-height: 1.6;
+  max-height: 64px;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .item-footer {
   font-size: 11px;
   color: #787c7e;
@@ -142,13 +182,5 @@ const displayTime = computed(() => formatPostTime(props.post.createTime));
 .media-img {
   width: 100%;
   height: 100%;
-}
-
-.item-media.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ccc;
-  font-size: 24px;
 }
 </style>

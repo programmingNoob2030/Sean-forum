@@ -107,7 +107,7 @@ CREATE TABLE `posts`  (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '帖子的ID',
   `creator` bigint NOT NULL COMMENT '帖子的发布者',
   `title` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '帖子的标题',
-  `content` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '帖子的内容',
+  `content` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '帖子的内容',
   `create_time` datetime NOT NULL DEFAULT (now()) COMMENT '帖子的发布时间',
   `like_count` int NULL DEFAULT 0 COMMENT '帖子的喜欢数',
   `comment_count` int NULL DEFAULT 0 COMMENT '帖子的评论数',

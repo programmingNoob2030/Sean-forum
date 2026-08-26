@@ -19,7 +19,12 @@
 
           <h1 class="post-title">{{ post.title }}</h1>
           
-          <div class="post-content" v-html="post.content"></div>
+          <PostContentRenderer
+            class="post-content"
+            :content="post.content"
+            :content-format="post.contentFormat"
+            :content-nodes="post.contentNodes"
+          />
 
           <div class="action-bar">
             <div class="vote-capsule">
@@ -108,6 +113,7 @@ import { formatPostTime } from '@/utils/timeFormat';
 import { CaretTop, CaretBottom, Share, Delete } from '@element-plus/icons-vue'
 import CommentCard from '@/components/comment/CommentCard.vue'
 import BoardInfo from '@/components/board/BoardInfo.vue'
+import PostContentRenderer from '@/components/post/PostContentRenderer.vue'
 import { useCommentStore } from '@/models/comment/commentStore'
 import type { GetPostCommentsDTO} from '@/models/pages'
 import { ensureLogin } from '@/utils/auth'

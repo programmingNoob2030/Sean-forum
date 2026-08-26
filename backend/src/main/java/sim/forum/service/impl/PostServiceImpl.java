@@ -16,6 +16,8 @@ import sim.forum.dto.post.CreatePostDTO;
 import sim.forum.dto.post.DeletePostDTO;
 import sim.forum.dto.post.PostQueryDTO;
 import sim.forum.dto.post.RestorePostDTO;
+import sim.forum.dto.post.content.PostContentCodec;
+import sim.forum.dto.post.content.PostContentDocument;
 import sim.forum.entity.BrowseRecord;
 import sim.forum.entity.Post;
 import sim.forum.event.comment.CommentCreateEvent;
@@ -48,8 +50,12 @@ public class PostServiceImpl implements PostService {
     private BrowseRecordService browseRecordService;
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+    @Autowired
+    private PostContentCodec postContentCodec;
     @Override
     public Post createPost(CreatePostDTO dto, Long userId) {
+        postContentCodec.parseForWrite(dto.getContent());
+
         Post p = new Post();
         p.setCreator(userId);
 
@@ -106,6 +112,7 @@ public class PostServiceImpl implements PostService {
         dto.setTargetId(postId);
         browseRecordService.saveRecordAsync(dto, userId);
         if (postVO == null) throw new BusinessException("没有找到此条帖子");
+        enrichPostContent(postVO);
         return postVO;
     }
 
@@ -118,6 +125,7 @@ public class PostServiceImpl implements PostService {
         PageHelper.startPage(num, size);
         List<PostVO> list = postMapper.getPosts(dto, UserContext.getUserId());
         if (list == null || list.isEmpty()) throw new BusinessException("当前没有任何帖子!");
+        list.forEach(this::enrichPostContent);
 
         // PageHelper 转换为 PageInfo
         return PageResult.of(new PageInfo<>(list));
@@ -126,7 +134,11 @@ public class PostServiceImpl implements PostService {
     @Override
     public List<RecentPostVO> getRecentPosts(List<Long> ids, Long userId) {
         if (userId == null) throw new BusinessException("此用户信息有误,无法查询帖子信息");
-        return postMapper.getRecentPosts(ids, userId);
+        List<RecentPostVO> recentPosts = postMapper.getRecentPosts(ids, userId);
+        if (recentPosts != null) {
+            recentPosts.forEach(this::enrichRecentPostContent);
+        }
+        return recentPosts;
     }
 
 
@@ -162,5 +174,20 @@ public class PostServiceImpl implements PostService {
     public void restorePostCommentCount(CommentRestoreEvent event) {
         countService.updateAtomicCount(postMapper, event.targetId(),
                 "comment_count", 1,true);
+    }
+
+    private void enrichPostContent(PostVO postVO) {
+        PostContentDocument document = postContentCodec.normalizeForRead(postVO.getContent());
+        postVO.setContentFormat(document.getFormat());
+        postVO.setContentNodes(postContentCodec.toNodeVoList(document));
+        postVO.setContentTextPreview(document.getTextPreview());
+        postVO.setFirstImagePath(document.getFirstImagePath());
+    }
+
+    private void enrichRecentPostContent(RecentPostVO recentPostVO) {
+        PostContentDocument document = postContentCodec.normalizeForRead(recentPostVO.getContent());
+        recentPostVO.setContentFormat(document.getFormat());
+        recentPostVO.setContentTextPreview(document.getTextPreview());
+        recentPostVO.setFirstImagePath(document.getFirstImagePath());
     }
 }

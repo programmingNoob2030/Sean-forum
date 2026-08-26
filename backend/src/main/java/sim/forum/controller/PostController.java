@@ -3,6 +3,7 @@ package sim.forum.controller;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import sim.forum.annotation.OptionalAuth;
 import sim.forum.context.UserContext;
 import sim.forum.dto.post.PostQueryDTO;
@@ -14,6 +15,7 @@ import sim.forum.dto.post.DeletePostDTO;
 import sim.forum.dto.post.RestorePostDTO;
 import sim.forum.entity.Post;
 import sim.forum.service.BrowseRecordService;
+import sim.forum.service.FileUploadService;
 import sim.forum.service.PostService;
 import sim.forum.vo.post.PostVO;
 import sim.forum.vo.post.RecentPostVO;
@@ -26,6 +28,8 @@ public class PostController {
     private PostService postService;
     @Autowired
     private BrowseRecordService browseRecordService;
+    @Autowired
+    private FileUploadService fileUploadService;
 
     @PostMapping("/posts")
     public Result<Post> createPost(@Valid @RequestBody CreatePostDTO dto){
@@ -44,6 +48,14 @@ public class PostController {
         Post post = postService.restorePost(dto);
         return Result.success(post);
     }
+
+    @PostMapping("/posts/images")
+    public Result<String> uploadPostContentImage(@RequestParam("file") MultipartFile file) {
+        Long userId = UserContext.getUserId();
+        String imagePath = fileUploadService.uploadPostContentImage(file, userId);
+        return Result.success(imagePath);
+    }
+
     @GetMapping("/posts/history")
     public Result<List<RecentPostVO>> getRecentPosts(){
         Long userId = UserContext.getUserId();

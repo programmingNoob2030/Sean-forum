@@ -1,4 +1,4 @@
-import type { CreatePostDTO, DeletePostDTO, GetPostsDTO, PostVO, RecentPostVO, RestorePostDTO } from '@/models/post/postTypes'
+import type { CreatePostDTO, DeletePostDTO, GetPostsDTO, PostImageUploadResponse, PostVO, RecentPostVO, RestorePostDTO } from '@/models/post/postTypes'
 import request from '@/utils/requests'
 import type { PageResult } from '@/models/pages'
 // 1. 获取所有帖子 (含逻辑删除)
@@ -6,6 +6,10 @@ export const apiGetPosts = (dto: GetPostsDTO) =>
   request.get<any, PageResult<PostVO>>('/posts', { params: dto })
 // 创建帖子
 export const apiCreatePost = (dto: CreatePostDTO) => request.post('/posts', dto)
+
+// 上传帖子正文图片
+export const apiUploadPostImage = (data: FormData) =>
+  request.post<any, PostImageUploadResponse>('/posts/images', data, { timeout: 30000 })
 
 // 删除帖子
 export const apiDeletePost = (dto: DeletePostDTO) => request.delete('/posts', {data: dto})
