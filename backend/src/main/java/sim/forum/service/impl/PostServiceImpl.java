@@ -123,7 +123,12 @@ public class PostServiceImpl implements PostService {
 
         // PageHelper分页操作必须紧扣查询语句上方
         PageHelper.startPage(num, size);
-        List<PostVO> list = postMapper.getPosts(dto, UserContext.getUserId());
+        List<PostVO> list;
+        if (dto.getSort() == PostQueryDTO.PostSort.HOT) {
+            list = postMapper.getHotPosts(dto, UserContext.getUserId());
+        } else {
+            list = postMapper.getPosts(dto, UserContext.getUserId());
+        }
         if (list == null || list.isEmpty()) throw new BusinessException("当前没有任何帖子!");
         list.forEach(this::enrichPostContent);
 

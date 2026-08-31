@@ -1,6 +1,16 @@
 <template>
   <el-main class="reddit-main-feed">
     <div class="feed-container" v-loading="loading">
+      <el-radio-group
+        v-model="postStore.indexPostDTO.sort"
+        @change="postStore.getIndexPosts"
+        class="sort-group"
+      >
+        <el-radio-button value="RECENT">最新</el-radio-button>
+        <el-radio-button value="POPULAR">最受欢迎</el-radio-button>
+        <el-radio-button value="COMMENTS">评论数</el-radio-button>
+        <el-radio-button value="HOT">最热门</el-radio-button>
+      </el-radio-group> 
       <el-empty v-if="filteredPosts.length === 0" description="No posts found" />
       <div class="post-list">
         <PostCard 
@@ -74,4 +84,35 @@ onMounted(() => loadData())
 .reddit-main-feed { padding: 0; max-width: 640px; flex: 1; }
 .side-rail { overflow: visible; }
 .pagination-wrapper { display: flex; justify-content: center; margin: 30px 0; }
+
+/* 选择框样式 */
+.sort-group {
+  margin-bottom: 20px;
+  gap: 8px;
+}
+
+.sort-group :deep(.el-radio-button__inner) {
+  border: 1px solid #dcdfe6;
+  border-radius: 6px;
+  box-shadow: none;
+  padding: 8px 16px;
+  color: #606266;
+  background-color: #fff;
+}
+
+.sort-group :deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-left: 1px solid #dcdfe6;
+}
+
+.sort-group :deep(.el-radio-button__inner:hover) {
+  color: #409eff;
+  border-color: #409eff;
+}
+
+.sort-group :deep(.el-radio-button.is-active .el-radio-button__inner) {
+  color: #409eff;
+  background-color: #ecf5ff;
+  border-color: #409eff;
+  box-shadow: none;
+}
 </style>

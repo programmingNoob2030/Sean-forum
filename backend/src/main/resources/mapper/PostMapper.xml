@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="sim.forum.mapper.PostMapper">
-    <select id="getPosts">
-        SELECT p.*,
+
+    <sql id="PostBaseColumns">
+        p.*,
         u.avatar AS creator_avatar,
         u.name AS creator_name,
         r.type AS post_rating_type,
         b.name AS board_name,
         b.cover AS board_cover
+    </sql>
+
+    <sql id="PostBaseFrom">
         FROM posts p
         LEFT JOIN users u
         ON p.creator = u.id
@@ -17,12 +21,111 @@
         AND r.creator = #{userId}
         LEFT JOIN boards b
         ON p.board_id = b.id
+    </sql>
+
+    <sql id="PostListWhere">
         <where>
-            <if test="dto.boardId != '' and dto.boardId != null">
+            <if test="dto.boardId != null">
                 p.board_id = #{dto.boardId}
             </if>
         </where>
-        ORDER BY p.create_time DESC
+    </sql>
+
+    <select id="getPosts">
+        SELECT
+        <include refid="PostBaseColumns"/>
+        <include refid="PostBaseFrom"/>
+        <include refid="PostListWhere"/>
+        <choose>
+            <when test="dto.sort == @sim.forum.dto.post.PostQueryDTO$PostSort@POPULAR">
+                ORDER BY p.like_count DESC
+            </when>
+            <when test="dto.sort == @sim.forum.dto.post.PostQueryDTO$PostSort@COMMENTS">
+                ORDER BY p.comment_count DESC
+            </when>
+            <otherwise>
+                ORDER BY p.create_time DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="getHotPosts">
+        SELECT ranked.*
+        FROM (
+            SELECT scored.*,
+                   CASE
+                       WHEN scored.max_view_log = 0 THEN 0
+                       ELSE scored.view_log / scored.max_view_log
+                   END AS view_score,
+                   CASE
+                       WHEN scored.max_abs_like_log = 0 THEN 0.5
+                       ELSE 0.5 + scored.signed_like_log / (2 * scored.max_abs_like_log)
+                   END AS like_score,
+                   CASE
+                       WHEN scored.max_comment_log = 0 THEN 0
+                       ELSE scored.comment_log / scored.max_comment_log
+                   END AS comment_score,
+                   CASE
+                       WHEN scored.age_hours &lt; 0 THEN 0
+                       ELSE POW(0.5, scored.age_hours / 72.0)
+                   END AS time_score,
+                   (
+                       0.10 * CASE
+                           WHEN scored.max_view_log = 0 THEN 0
+                           ELSE scored.view_log / scored.max_view_log
+                       END
+                       + 0.25 * CASE
+                           WHEN scored.max_abs_like_log = 0 THEN 0.5
+                           ELSE 0.5 + scored.signed_like_log / (2 * scored.max_abs_like_log)
+                       END
+                       + 0.25 * CASE
+                           WHEN scored.max_comment_log = 0 THEN 0
+                           ELSE scored.comment_log / scored.max_comment_log
+                       END
+                       + 0.40 * CASE
+                           WHEN scored.age_hours &lt; 0 THEN 0
+                           ELSE POW(0.5, scored.age_hours / 72.0)
+                       END
+                   ) AS hot_score
+            FROM (
+                SELECT base.*,
+                       MAX(base.view_log) OVER () AS max_view_log,
+                       MAX(base.comment_log) OVER () AS max_comment_log,
+                       MAX(ABS(base.signed_like_log)) OVER () AS max_abs_like_log
+                FROM (
+                    SELECT
+                    <include refid="PostBaseColumns"/>,
+                    IFNULL(view_stats.viewers24, 0) AS viewers24,
+                    IFNULL(comment_stats.top_comments, 0) AS top_comments,
+                    IFNULL(p.like_count, 0) AS net_like,
+                    GREATEST(TIMESTAMPDIFF(HOUR, p.create_time, NOW()), 0) AS age_hours,
+                    LOG(1 + IFNULL(view_stats.viewers24, 0)) AS view_log,
+                    LOG(1 + IFNULL(comment_stats.top_comments, 0)) AS comment_log,
+                    CASE
+                        WHEN IFNULL(p.like_count, 0) = 0 THEN 0
+                        ELSE SIGN(IFNULL(p.like_count, 0)) * LOG(1 + ABS(IFNULL(p.like_count, 0)))
+                    END AS signed_like_log
+                    <include refid="PostBaseFrom"/>
+                    LEFT JOIN (
+                        SELECT br.target_id, COUNT(DISTINCT br.user_id) AS viewers24
+                        FROM browse_records br
+                        WHERE br.target = 'POST'
+                          AND br.create_time >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+                        GROUP BY br.target_id
+                    ) view_stats ON view_stats.target_id = p.id
+                    LEFT JOIN (
+                        SELECT c.target_id, COUNT(1) AS top_comments
+                        FROM comments c
+                        WHERE c.target = 'POST'
+                          AND c.parent_id = 0
+                          AND c.is_deleted = 0
+                        GROUP BY c.target_id
+                    ) comment_stats ON comment_stats.target_id = p.id
+                    <include refid="PostListWhere"/>
+                ) base
+            ) scored
+        ) ranked
+        ORDER BY ranked.hot_score DESC, ranked.create_time DESC, ranked.id DESC
     </select>
 
     <select id="getPostWithRatingConditionById">
@@ -36,6 +139,7 @@
         AND r.creator = #{userId}
         WHERE p.id = #{postId}
     </select>
+
     <select id="getRecentPosts" resultType="sim.forum.vo.post.RecentPostVO">
         SELECT
         p.id, p.title, p.content, p.like_count AS likeCount,
@@ -52,8 +156,6 @@
                     </foreach>
                 </when>
                 <otherwise>
-                    <!-- 这里的 otherwise 就相当于 else -->
-                    <!-- 如果 ids 为空，添加一个永远为假的条件，防止全表扫描 -->
                     AND 1 = 0
                 </otherwise>
             </choose>

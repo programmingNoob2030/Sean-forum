@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { apiGetPosts, apiGetRecentPosts } from "@/api/post";
-import type { GetPostsDTO, PostVO, RecentPostVO } from "./postTypes";
+import type { GetPostsDTO, PostSort, PostVO, RecentPostVO } from "./postTypes";
 
 export const usePostStore = defineStore("post", () => {
   const indexPosts = ref<PostVO[]>([]);
@@ -11,6 +11,7 @@ export const usePostStore = defineStore("post", () => {
   const indexPostDTO = ref<GetPostsDTO>({
     pageNum: 1,
     pageSize: 10,
+    sort: 'RECENT'
   });
   const boardPostDTO = ref<GetPostsDTO>({
     pageNum: 1,
@@ -19,8 +20,9 @@ export const usePostStore = defineStore("post", () => {
   });
   const recentPostList = ref<RecentPostVO[]>([]);
 
-  const getIndexPosts = async () => {
+  const getIndexPosts = async (sort?: PostSort) => {
     try {
+      if (sort != null) indexPostDTO.value.sort = sort
       const res = await apiGetPosts(indexPostDTO.value);
       indexPosts.value = res.list;
       indexTotal.value = res.total;
