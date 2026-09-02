@@ -1,16 +1,20 @@
 package sim.forum.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestBody;
 import sim.forum.context.UserContext;
-import sim.forum.dto.PageRequestDTO;
 import sim.forum.dto.browserecord.CreateBrowseRecordDTO;
 import sim.forum.dto.post.CreatePostDTO;
 import sim.forum.dto.post.DeletePostDTO;
@@ -36,11 +40,13 @@ import sim.forum.service.PostService;
 import sim.forum.vo.post.PostVO;
 import sim.forum.vo.post.RecentPostVO;
 
+import java.time.Duration;
 import java.util.List;
 
 @Transactional
 @Service
 @Validated
+@Slf4j
 public class PostServiceImpl implements PostService {
     @Autowired
     private PostMapper postMapper;
@@ -52,6 +58,10 @@ public class PostServiceImpl implements PostService {
     private ApplicationEventPublisher eventPublisher;
     @Autowired
     private PostContentCodec postContentCodec;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
+    @Autowired
+    private ObjectMapper objectMapper;
     @Override
     public Post createPost(CreatePostDTO dto, Long userId) {
         postContentCodec.parseForWrite(dto.getContent());
@@ -116,6 +126,14 @@ public class PostServiceImpl implements PostService {
         return postVO;
     }
 
+    private List<PostVO> queryPosts(PostQueryDTO dto, Long userId) {
+        if (dto.getSort() == PostQueryDTO.PostSort.HOT) {
+            return postMapper.getHotPosts(dto, userId);
+        } else {
+            return postMapper.getPosts(dto, userId);
+        }
+    }
+
     @Override
     public PageResult<PostVO> getPosts(@RequestBody PostQueryDTO dto) {
         int num = (dto.getPageNum() == null || dto.getPageNum() <= 0) ? 1 : dto.getPageNum();
@@ -124,11 +142,33 @@ public class PostServiceImpl implements PostService {
         // PageHelper分页操作必须紧扣查询语句上方
         PageHelper.startPage(num, size);
         List<PostVO> list;
-        if (dto.getSort() == PostQueryDTO.PostSort.HOT) {
-            list = postMapper.getHotPosts(dto, UserContext.getUserId());
-        } else {
-            list = postMapper.getPosts(dto, UserContext.getUserId());
+
+        String key = dto.getSort().name() + ":sort:posts";
+        String json = redisTemplate.opsForValue().get(key);
+        if (json == null) {
+            list = this.queryPosts(dto, UserContext.getUserId());
+            try {
+                String cacheJson = objectMapper.writeValueAsString(list);
+                redisTemplate.opsForValue().set(
+                        key,
+                        cacheJson,
+                        Duration.ofSeconds(10L)
+                );
+            } catch (JsonProcessingException e) {
+                log.warn("帖子列表序列化失败，跳过 Redis 缓存", e);
+            }
+        }else {
+            try {
+                list = objectMapper.readValue(
+                        json,
+                        new TypeReference<List<PostVO>>() {}
+                );
+            } catch (JsonProcessingException e) {
+                log.warn("帖子列表反序列化失败，跳过 Redis 缓存");
+                list = this.queryPosts(dto, UserContext.getUserId());
+            }
         }
+
         if (list == null || list.isEmpty()) throw new BusinessException("当前没有任何帖子!");
         list.forEach(this::enrichPostContent);
 
