@@ -56,7 +56,7 @@ public class BoardServiceImpl implements BoardService {
     @Override
     public Board createBoard(BoardDTO dto, Long creator) {
         Board board = isBoardNameUsed(dto.getName());
-        if (board != null) throw new BusinessException("社区名字已存�?");
+        if (board != null) throw new BusinessException("社区名字已存在");
         board = new Board();
         // 创建社区
         board.setName(dto.getName());
@@ -67,7 +67,7 @@ public class BoardServiceImpl implements BoardService {
         board.setMemberCount(1);
         boardMapper.insert(board);
         board = isBoardNameUsed(dto.getName());
-        // 更新社区的成�?
+        // 更新社区的成�?
         BoardMember member = new BoardMember();
         member.setBoardId(board.getId());
         member.setMemberId(creator);
@@ -96,7 +96,7 @@ public class BoardServiceImpl implements BoardService {
     public BoardVO getBoardDetail(Long id, Long userId) {
         BoardVO boardVO = boardMapper.getBoardDetail(id, userId);
         if (boardVO == null) {
-            throw new BusinessException("目标社区不存�?");
+            throw new BusinessException("目标社区不存在");
         }
         if (boardVO.getCurrentUserRole() == null) boardVO.setCurrentUserRole("GUEST");
         CreateBrowseRecordDTO dto = new CreateBrowseRecordDTO();
@@ -170,7 +170,7 @@ public class BoardServiceImpl implements BoardService {
 
     @Override
     public List<BriefBoardVO> getRecentBoards(List<Long> ids, Long userId) {
-        if (userId == null) throw new BusinessException("此用户信息有�?无法查询!");
+        if (userId == null) throw new BusinessException("此用户信息有有误，无法查询!");
         return boardMapper.getRecentBoards(ids, userId);
     }
 
@@ -180,7 +180,7 @@ public class BoardServiceImpl implements BoardService {
                 ? new ArrayList<>()
                 : boardMemberService.getBoardsByMemberId(userId);
         List<Board> boards = boardMapper.selectList(null);
-        // 空间换时�?
+        // 空间换时�?
         Map<Long,BoardMember> boardMembersMap = boardMembers
                 .stream()
                 .collect(Collectors.toMap(BoardMember::getBoardId, boardMember -> boardMember));
