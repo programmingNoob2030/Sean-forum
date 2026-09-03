@@ -22,7 +22,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import NavBar from '@/components/index/NavBar.vue'
 import LeftSideBar from '@/components/index/LeftSideBar.vue'
 import PostEdit from '@/components/post/PostEdit.vue'
@@ -30,8 +31,18 @@ import { usePostStore } from '@/models/post/postStore'
 import { ElMessage } from 'element-plus'
 
 const searchQuery = ref('')
+const route = useRoute()
 const postEditRef = ref()
 const postStore = usePostStore()
+
+watch(
+  () => route.query.keyword,
+  (value) => {
+    const keyword = Array.isArray(value) ? value[0] : value
+    searchQuery.value = typeof keyword === 'string' ? keyword.trim() : ''
+  },
+  { immediate: true }
+)
 
 const handleCreatePost = () => postEditRef.value.open()
 // 刷新事件通知可以通过事件总线/状态管理或者简单地重载

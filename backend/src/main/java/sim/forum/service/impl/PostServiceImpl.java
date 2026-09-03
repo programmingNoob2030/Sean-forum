@@ -138,39 +138,66 @@ public class PostServiceImpl implements PostService {
     public PageResult<PostVO> getPosts(@RequestBody PostQueryDTO dto) {
         int num = (dto.getPageNum() == null || dto.getPageNum() <= 0) ? 1 : dto.getPageNum();
         int size = (dto.getPageSize() == null || dto.getPageSize() <= 0) ? 10 : dto.getPageSize();
+        if (dto.getSort() == null) {
+            dto.setSort(PostQueryDTO.PostSort.RECENT);
+        }
+
+        String keyword = dto.getKeyword();
+        if (keyword != null) {
+            keyword = keyword.trim();
+            if (keyword.isEmpty()) {
+                keyword = null;
+            } else if (keyword.length() > 100) {
+                throw new BusinessException("搜索关键词不能超过100个字符");
+            }
+            dto.setKeyword(keyword);
+        }
+        boolean hasKeyword = keyword != null;
+        boolean useListCache = redisTemplate != null
+                && num == 1
+                && dto.getBoardId() == null
+                && !hasKeyword;
 
         // PageHelper分页操作必须紧扣查询语句上方
         PageHelper.startPage(num, size);
         List<PostVO> list;
 
-        String key = dto.getSort().name() + ":sort:posts";
-        String json = redisTemplate.opsForValue().get(key);
-        if (json == null) {
+        if (!useListCache) {
             list = this.queryPosts(dto, UserContext.getUserId());
-            try {
-                String cacheJson = objectMapper.writeValueAsString(list);
-                redisTemplate.opsForValue().set(
-                        key,
-                        cacheJson,
-                        Duration.ofSeconds(10L)
-                );
-            } catch (JsonProcessingException e) {
-                log.warn("帖子列表序列化失败，跳过 Redis 缓存", e);
-            }
         }else {
-            try {
-                list = objectMapper.readValue(
-                        json,
-                        new TypeReference<List<PostVO>>() {}
-                );
-            } catch (JsonProcessingException e) {
-                log.warn("帖子列表反序列化失败，跳过 Redis 缓存");
+            String key = dto.getSort().name() + ":sort:posts";
+            String json = redisTemplate.opsForValue().get(key);
+            if (json == null) {
                 list = this.queryPosts(dto, UserContext.getUserId());
+                try {
+                    String cacheJson = objectMapper.writeValueAsString(list);
+                    redisTemplate.opsForValue().set(
+                            key,
+                            cacheJson,
+                            Duration.ofSeconds(10L)
+                    );
+                } catch (JsonProcessingException e) {
+                    log.warn("帖子列表序列化失败，跳过 Redis 缓存", e);
+                }
+            } else {
+                try {
+                    list = objectMapper.readValue(
+                            json,
+                            new TypeReference<List<PostVO>>() {}
+                    );
+                } catch (JsonProcessingException e) {
+                    log.warn("帖子列表反序列化失败，跳过 Redis 缓存");
+                    list = this.queryPosts(dto, UserContext.getUserId());
+                }
             }
         }
 
-        if (list == null || list.isEmpty()) throw new BusinessException("当前没有任何帖子!");
-        list.forEach(this::enrichPostContent);
+        if ((list == null || list.isEmpty()) && !hasKeyword) {
+            throw new BusinessException("当前没有任何帖子!");
+        }
+        if (list != null) {
+            list.forEach(this::enrichPostContent);
+        }
 
         // PageHelper 转换为 PageInfo
         return PageResult.of(new PageInfo<>(list));

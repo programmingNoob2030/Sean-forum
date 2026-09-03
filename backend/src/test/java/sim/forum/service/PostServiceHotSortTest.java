@@ -1,6 +1,7 @@
 package sim.forum.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.pagehelper.Page;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,5 +109,25 @@ class PostServiceHotSortTest {
 
         Assertions.assertEquals(1, result.getList().size());
         verify(postMapper).getHotPosts(dto, null);
+    }
+
+    @Test
+    void searchEmptyPageKeepsMatchingTotalAndRequestedPageMetadata() {
+        Page<PostVO> emptyPage = new Page<>(2, 3);
+        emptyPage.setTotal(1);
+        when(postMapper.getPosts(any(PostQueryDTO.class), eq(11L))).thenReturn(emptyPage);
+
+        PostQueryDTO dto = new PostQueryDTO();
+        dto.setKeyword("Vue");
+        dto.setPageNum(2);
+        dto.setPageSize(3);
+        dto.setSort(PostQueryDTO.PostSort.RECENT);
+
+        PageResult<PostVO> result = postService.getPosts(dto);
+
+        Assertions.assertTrue(result.getList().isEmpty());
+        Assertions.assertEquals(1L, result.getTotal());
+        Assertions.assertEquals(2, result.getPageNum());
+        Assertions.assertEquals(3, result.getPageSize());
     }
 }

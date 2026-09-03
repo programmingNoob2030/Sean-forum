@@ -11,6 +11,8 @@
         placeholder="Search Sean's Forum" 
         class="reddit-search"
         clearable
+        maxlength="100"
+        @keyup.enter="handleSearch"
       >
         <template #prefix><el-icon><Search /></el-icon></template>
       </el-input>
@@ -57,6 +59,15 @@ const search = computed({
   get: () => props.modelValue,
   set: (val) => emit('update:modelValue', val)
 })
+
+const handleSearch = () => {
+  const keyword = String(search.value ?? '').trim()
+  search.value = keyword
+  router.push({
+    path: '/search',
+    query: keyword ? { keyword } : {}
+  })
+}
 
 const handleNotificationClick = ()=>{
   ensureLogin(()=>{

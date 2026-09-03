@@ -82,5 +82,6 @@ export type PostSort = 'RECENT' | 'POPULAR' | 'COMMENTS' | 'HOT';
 // 增加筛选sort参数
 export type GetPostsDTO = PageRequestDTO & {
   boardId?: number;
-  sort?: PostSort
+  sort?: PostSort;
+  keyword?: string;
 };

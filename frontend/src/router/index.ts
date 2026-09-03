@@ -4,6 +4,7 @@ import Login from '@/views/users/Login.vue'
 import Profile from '@/views/users/Profile.vue'
 import HomeFeed from '@/components/index/HomeFeed.vue'
 import PostDetail from '@/views/posts/PostDetail.vue'
+import Search from '@/views/search/Search.vue'
 
 const routes = [
   {
@@ -20,6 +21,11 @@ const routes = [
         path: 'post/:id', // 访问 '/post/123' 时展示详情
         name: 'PostDetail',
         component: PostDetail // 此时 HomeFeed 卸载，PostDetail 渲染在右侧
+      },
+      {
+        path: 'search',
+        name: 'Search',
+        component: Search
       }
     ]
   },
