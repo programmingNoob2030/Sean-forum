@@ -210,6 +210,7 @@ public class PostServiceImpl implements PostService {
             dto.setKeyword(keyword);
         }
 
+        PageHelper.startPage(num, size);
         List<PostVO> list = this.queryPosts(dto, UserContext.getUserId());
         return this.buildPostPageResult(list);
     }
