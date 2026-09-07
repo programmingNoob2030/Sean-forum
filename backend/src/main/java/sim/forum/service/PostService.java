@@ -23,6 +23,8 @@ public interface PostService {
 
     PageResult<PostVO> getPosts(@RequestBody PostQueryDTO dto);
 
+    PageResult<PostVO> getSearchedPosts(@RequestBody PostQueryDTO dto);
+
     PostVO getPostById(Long userId, Long postId);
 
     Post selectById(Long id);

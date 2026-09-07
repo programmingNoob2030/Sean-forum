@@ -75,6 +75,14 @@ public class PostController {
         PageResult<PostVO> posts = postService.getPosts(dto);
         return Result.success(posts);
     }
+
+    @OptionalAuth
+    @GetMapping("/posts/search")
+    public Result<PageResult<PostVO>> searchPosts(PostQueryDTO dto){
+        PageResult<PostVO> posts = postService.getSearchedPosts(dto);
+        return Result.success(posts);
+
+    }
     @GetMapping("/post/{id}")
     @OptionalAuth
     public Result<PostVO> getPostById(@PathVariable Long id){

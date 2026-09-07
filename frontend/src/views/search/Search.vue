@@ -62,7 +62,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { apiGetPosts } from '@/api/post'
+import { apiGetPosts, apiGetSearchedPosts } from '@/api/post'
 import type { PostSort, PostVO } from '@/models/post/postTypes'
 import PostCard from '@/components/post/PostCard.vue'
 import RightSideBar from '@/components/index/RightSideBar.vue'
@@ -89,7 +89,7 @@ const loadPosts = async () => {
   loading.value = true
   errorMessage.value = ''
   try {
-    const result = await apiGetPosts({
+    const result = await apiGetSearchedPosts({
       keyword: keyword.value || undefined,
       pageNum: pageNum.value,
       pageSize,
@@ -102,8 +102,7 @@ const loadPosts = async () => {
     if (sequence !== requestSequence) return
     posts.value = []
     total.value = 0
-    errorMessage.value = '搜索请求失败，请稍后重试'
-    ElMessage.error(errorMessage.value)
+    console.log('搜索请求失败，请稍后重试')
   } finally {
     if (sequence === requestSequence) {
       loading.value = false

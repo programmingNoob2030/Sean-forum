@@ -125,6 +125,15 @@ public class PostServiceImpl implements PostService {
         enrichPostContent(postVO);
         return postVO;
     }
+    private PageResult<PostVO> buildPostPageResult(List<PostVO> list) {
+        if (list == null || list.isEmpty()) {
+            throw new BusinessException("当前没有任何帖子!");
+        }
+
+        list.forEach(this::enrichPostContent);
+
+        return PageResult.of(new PageInfo<>(list));
+    }
 
     private List<PostVO> queryPosts(PostQueryDTO dto, Long userId) {
         if (dto.getSort() == PostQueryDTO.PostSort.HOT) {
@@ -136,27 +145,15 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageResult<PostVO> getPosts(@RequestBody PostQueryDTO dto) {
+
         int num = (dto.getPageNum() == null || dto.getPageNum() <= 0) ? 1 : dto.getPageNum();
         int size = (dto.getPageSize() == null || dto.getPageSize() <= 0) ? 10 : dto.getPageSize();
         if (dto.getSort() == null) {
             dto.setSort(PostQueryDTO.PostSort.RECENT);
         }
-
-        String keyword = dto.getKeyword();
-        if (keyword != null) {
-            keyword = keyword.trim();
-            if (keyword.isEmpty()) {
-                keyword = null;
-            } else if (keyword.length() > 100) {
-                throw new BusinessException("搜索关键词不能超过100个字符");
-            }
-            dto.setKeyword(keyword);
-        }
-        boolean hasKeyword = keyword != null;
         boolean useListCache = redisTemplate != null
                 && num == 1
-                && dto.getBoardId() == null
-                && !hasKeyword;
+                && dto.getBoardId() == null;
 
         // PageHelper分页操作必须紧扣查询语句上方
         PageHelper.startPage(num, size);
@@ -191,16 +188,30 @@ public class PostServiceImpl implements PostService {
                 }
             }
         }
+        return this.buildPostPageResult(list);
+    }
 
-        if ((list == null || list.isEmpty()) && !hasKeyword) {
-            throw new BusinessException("当前没有任何帖子!");
-        }
-        if (list != null) {
-            list.forEach(this::enrichPostContent);
+    @Override
+    public PageResult<PostVO> getSearchedPosts(@RequestBody PostQueryDTO dto){
+        int num = (dto.getPageNum() == null || dto.getPageNum() <= 0) ? 1 : dto.getPageNum();
+        int size = (dto.getPageSize() == null || dto.getPageSize() <= 0) ? 10 : dto.getPageSize();
+        if (dto.getSort() == null) {
+            dto.setSort(PostQueryDTO.PostSort.RECENT);
         }
 
-        // PageHelper 转换为 PageInfo
-        return PageResult.of(new PageInfo<>(list));
+        String keyword = dto.getKeyword();
+        if (keyword != null) {
+            keyword = keyword.trim();
+            if (keyword.isEmpty()) {
+                keyword = null;
+            } else if (keyword.length() > 100) {
+                throw new BusinessException("搜索关键词不能超过100个字符");
+            }
+            dto.setKeyword(keyword);
+        }
+
+        List<PostVO> list = this.queryPosts(dto, UserContext.getUserId());
+        return this.buildPostPageResult(list);
     }
 
     @Override

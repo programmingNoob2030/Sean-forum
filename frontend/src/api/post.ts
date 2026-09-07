@@ -4,6 +4,11 @@ import type { PageResult } from '@/models/pages'
 // 1. 获取所有帖子 (含逻辑删除)
 export const apiGetPosts = (dto: GetPostsDTO) =>
   request.get<any, PageResult<PostVO>>('/posts', { params: dto })
+
+// 获取搜索帖子结果
+export const apiGetSearchedPosts = (dto: GetPostsDTO) =>
+  request.get<any, PageResult<PostVO>>('/posts/search', { params: dto })
+
 // 创建帖子
 export const apiCreatePost = (dto: CreatePostDTO) => request.post('/posts', dto)
 
