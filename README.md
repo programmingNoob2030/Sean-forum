@@ -1,135 +1,248 @@
+# Sean's Forum
 
+一个基于 Spring Boot 3 与 Vue 3 的前后端分离社区论坛系统，围绕用户认证、社区板块、内容发布、评论互动、评分、站内消息和最近浏览记录构建完整业务闭环。
 
-# Sean's Forum - 基于 Spring Boot 3 + Vue3 的轻量级社区论坛系统
+该项目是个人学习与求职展示项目，当前采用单体架构，重点实践 RESTful API 设计、MySQL 数据建模、Redis 缓存、事件解耦、前后端联调和接口性能测试，不以大规模生产部署或复杂分布式架构为目标。
 
-## 📖 项目简介
+## 项目亮点
 
-Sean's Forum 是一个前后端分离的轻量级社区论坛系统，围绕用户注册登录、板块创建与浏览、帖子发布、评论互动、点赞/点踩、站内消息和最近浏览记录等核心社区场景展开。
+- 使用 JWT、登录拦截器和 `ThreadLocal` 管理请求级用户上下文，使用 BCrypt 保存密码哈希。
+- 覆盖用户、社区、帖子、评论/子评论、点赞/点踩、消息通知和浏览记录等主要论坛场景。
+- 使用 Spring Event 与异步线程池解耦部分计数更新、消息发送和浏览记录逻辑。
+- 使用 Redis 保存邮箱验证码、近期浏览记录和未读消息数等状态数据。
+- 对 `/posts` 的四种排序开展 JMeter 本地对比压测，并针对首页热点查询实现 Redis Cache-Aside。
+- 缓存仅覆盖无 `boardId` 时各排序的第一页，其他分页继续查询 MySQL，以控制缓存范围和维护成本。
 
-项目后端基于 Spring Boot 3 构建 RESTful API，使用 MyBatis-Plus 操作 MySQL 完成核心业务数据持久化，并通过 Redis 管理邮箱验证码、登录会话和浏览记录等状态数据。前端基于 Vue3 + Element Plus 实现页面交互与接口联调，形成了从用户认证、内容发布到互动通知的完整业务闭环。
+## 技术栈
 
-------
+### 后端
 
-## 🛠️ 技术栈
+- Java 17
+- Spring Boot 3.5.11、Spring MVC
+- MyBatis-Plus 3.5.9、PageHelper 2.1.0
+- MySQL 8
+- Redis、Spring Data Redis
+- JWT、jBCrypt、Jakarta Validation
+- Spring Event、`ThreadPoolTaskExecutor`
+- Spring Boot Mail
+- Maven
 
-- **前端框架**:   Vue3、Vite、Element Plus、Vue Router、Pinia、Axios
-- **后端框架**：Spring Boot 3、MyBatis-Plus
-- **数据存储**：MySQL、Redis
-- **身份验证**：JWT + jBCrypt 
-- **文件存储**：本地文件系统上传 (可扩展为 OSS)
-- **工具类**：Lombok, PageHelper (分页插件), Jakarta Validation (参数校验)
-- **邮件服务**：Spring Boot Mail (基于 SMTP 协议)
+### 前端
 
-------
+- Vue 3、TypeScript
+- Vite 8
+- Vue Router、Pinia
+- Element Plus、Axios
 
-## 🏗️ 项目目录布局
+### 开发与测试
 
-项目采用前后端分离目录结构，工程结构如下：
+- Git、Postman
+- Docker Compose（本地 MySQL、Redis 环境）
+- Apache JMeter 5.6.3
 
-前端
+## 系统架构
 
-```
-frontend
-├── src/
-│   ├── api/                  # 接口请求封装
-│   ├── assets/               # 静态资源（如：default_avatar.svg）
-│   ├── components/           # 业务子组件（如：message/MessageItem.vue）
-│   ├── models/ 			  # 类型定义与 Pinia 状态管理
-│   ├── router/               # 路由映射与路由守卫
-│   ├── utils/                # 工具函数（如：axios封装、Token管理）
-│   ├── views/                # 页面级组件/路由入口（如：users/login.vue）
-│   ├── App.vue               # 顶层根组件
-│   ├── main.ts               # 项目入口文件
-│   └── style.css             # 全局基础样式
-└── index.html                # SPA 主 HTML 模板
-```
-
-后端
-
-```
-backend
-├── src/main/java/sim/forum
-│   ├── annotation/        # 自定义注解（如：@OptionalAuth）
-│   ├── config/            # 框架配置（Redis, MVC, MyBatis Plus）
-│   ├── context/           # 全局上下文（如：UserContext 基于 ThreadLocal）
-│   ├── controller/        # RESTful API 控制器层
-│   ├── dto/               # 数据传输对象（接收前端参数）
-│   ├── entity/            # 数据库实体类
-│   ├── event/             # 事件监听/发布逻辑
-│   ├── exception/         # 全局异常处理器
-│   ├── interceptor/       # 拦截器（JWT 校验、权限控制）
-│   ├── listener/          # Spring 监听器
-│   ├── mapper/            # MyBatis Mapper 接口
-│   ├── result/            # 统一响应封装（Result, PageResult）
-│   ├── service/           # 业务逻辑层接口及实现
-│   ├── utils/             # 常用工具类
-│   ├── vo/                # 视图对象（返回给前端的脱敏数据）
-│   └── ForumApplication.java # 项目启动类
-└── src/main/resources
-    ├── mapper/            # MyBatis XML 映射文件
-    └── application.yaml.example   # 配置文件示例
+```text
+Vue 3 + Element Plus
+        │
+        │ Axios / JSON / Multipart
+        ▼
+Spring MVC Controller
+        │
+        ▼
+Service / ServiceImpl
+        │
+        ├── MyBatis-Plus / PageHelper ── MySQL
+        ├── StringRedisTemplate ──────── Redis
+        ├── Spring Event / Async Pool
+        └── Local File System
 ```
 
-------
+后端沿用 Controller、Service、Mapper 分层：Controller 处理请求与统一响应，Service 负责业务判断、事务、事件和缓存协调，Mapper 与 XML 承担数据访问及复杂查询。
 
-## 🌟 核心功能模块
+## 已实现功能
 
-### 1. 用户中心 (User Module)
+### 用户与认证
 
-- **身份管理**：支持用户注册、基于密码的登录验证（使用 BCrypt 加密保存）。
-- **安全校验**：集成 163 邮箱 SMTP 服务，实现邮箱有效性检查与验证码校验。
-- **个人信息**：支持用户头像上传（MultipartFile 处理）及基本资料更新。
+- 用户注册、登录和 JWT 签发
+- 邮箱验证码与密码找回
+- 用户资料更新和头像上传
+- 登录拦截器与可选认证接口
+- BCrypt 密码哈希存储
 
-### 2. 板块管理 (Board Module)
+### 社区
 
-- **创建与发现**：用户可创建社区板块，系统支持通过关键词搜索板块。
-- **板块广场**：提供广场视图，展示推荐或热门板块。
-- **成员关联**：追踪用户加入或创建的板块。
+- 创建和编辑社区
+- 社区广场、我的社区、社区搜索与详情
+- 加入/退出社区
+- 社区封面上传
+- 社区最近浏览记录
 
-### 3. 内容发布 (Post Module)
+### 帖子
 
-- **发布逻辑**：支持板块内的帖子创建，具备自动关联当前登录用户的功能。
-- **生命周期管理**：支持帖子的逻辑删除与物理恢复。
-- **分页检索**：高性能的分页查询，支持按需加载帖子列表。
+- 帖子发布、详情和分页列表
+- `RECENT`、`POPULAR`、`COMMENTS`、`HOT` 排序
+- 关键词搜索
+- 帖子逻辑删除与恢复
+- 帖子图片上传
+- 帖子最近浏览记录
 
-### 4. 互动评价 (Comment & Rating)
+### 评论与评分
 
-- **多层评论**：支持针对帖子的评论发表、删除与恢复。
-- **投票系统**：支持点赞/踩（Toggle 机制），基于 `RatingDTO` 实现高效的评价切换。
+- 根评论和子评论
+- 评论逻辑删除与恢复
+- 帖子及评论的点赞/点踩切换
+- 关联计数更新
 
-------
+### 消息与浏览记录
 
-## 🚀 快速开始
+- 评论、点赞/点踩触发站内消息
+- 消息列表与未读消息数
+- Redis 保存有限数量的近期访问 ID
+- MySQL 保存浏览流水
+
+### 文件与运行环境
+
+- 本地文件系统保存头像、社区封面和帖子图片
+- Spring MVC 静态资源映射 `/uploads/**`
+- MySQL 与 Redis 本地开发环境配置
+
+## Redis 缓存策略
+
+帖子列表使用 Cache-Aside 模式：
+
+```text
+请求 /posts
+    │
+    ├── pageNum = 1 且未指定 boardId
+    │       │
+    │       ├── 命中 Redis ── 直接返回
+    │       └── 未命中 ────── 查询 MySQL → 写入 Redis → 返回
+    │
+    └── 其他分页或指定 boardId ── 直接查询 MySQL
+```
+
+- 每种 `sort` 使用独立缓存键。
+- 当前 TTL 为 10 秒。
+- 只缓存全站帖子列表第一页，不缓存所有分页。
+- 该范围是基于首页访问模式与缓存维护成本作出的工程取舍，并非由压测直接证明的真实流量分布。
+
+## 性能测试
+
+项目使用 JMeter 对以下请求开展本地性能对比测试：
+
+```text
+GET /posts?pageNum=1&pageSize=10&sort={SORT}
+```
+
+测试覆盖 `RECENT`、`POPULAR`、`COMMENTS` 和 `HOT`，对比 MySQL 默认查询、排序字段索引与 Redis Cache-Aside。JMX 的主要条件为：
+
+- Ramp-Up：10 秒
+- 每线程循环：10 次
+- 请求规模：`threads × 10`
+- 测试环境：本地开发环境
+- Redis 阶段主要验证缓存命中路径
+
+代表性结果：
+
+| 场景 | 并发与请求数 | 对比路径 | P95 | 请求成功率 |
+| --- | --- | --- | ---: | ---: |
+| COMMENTS | 80 threads / 800 requests | 索引后 MySQL → Redis 命中 | 391.10 ms → 5 ms | 100% |
+| HOT | 10 threads / 100 requests | MySQL → Redis 命中 | 2345.85 ms → 5.05 ms | 100% |
+
+单列排序索引在当前约 1 万条帖子及现有多表关联查询结构下未表现出稳定收益，因此项目没有把“增加索引”直接描述为确定性优化成果。HOT 排序包含浏览和评论聚合、窗口函数、临时结果以及动态热度分数计算，其数据库查询成本明显高于普通排序。
+
+完整实验说明见 [`docs/pressure-test/posts/final.md`](docs/pressure-test/posts/final.md)。以上结果仅代表本地相同测试条件下的对比实验，不代表线上 QPS、生产容量或真实业务流量。
+
+## 项目结构
+
+```text
+Sean-Forum-Project/
+├── backend/
+│   └── src/main/
+│       ├── java/sim/forum/
+│       │   ├── controller/    # REST API
+│       │   ├── service/       # 业务服务及实现
+│       │   ├── mapper/        # MyBatis Mapper
+│       │   ├── dto/           # 请求 DTO
+│       │   ├── vo/            # 响应 VO
+│       │   ├── entity/        # 数据库实体
+│       │   ├── event/         # 业务事件
+│       │   ├── interceptor/   # 登录拦截器
+│       │   └── config/        # MVC 与线程池配置
+│       └── resources/
+│           ├── mapper/        # MyBatis XML
+│           └── application.yaml.example
+├── frontend/
+│   └── src/
+│       ├── api/               # Axios 接口封装
+│       ├── components/        # 业务组件
+│       ├── models/            # 类型与 Pinia Store
+│       ├── router/            # 路由
+│       ├── utils/             # 请求与认证工具
+│       └── views/             # 页面视图
+├── sql/                       # 初始化与迁移 SQL
+└── docs/                      # 架构、设计、测试与截图
+```
+
+## 快速开始
 
 ### 环境要求
 
-- **JDK**：17+
-- **Maven**：3.8+
-- **Node.js**：18+
-- **MySQL**：8.0+
-- **Redis**：6.0+
+- JDK 17+
+- Maven 3.8+
+- Node.js 18+
+- MySQL 8.0+
+- Redis 6.0+
 
-### 数据库配置
+### 1. 初始化数据库
 
-1. 创建名为 `forum_db` 的数据库。
+创建数据库：
 
-```SQL
-CREATE DATABASE forum_db CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+```sql
+CREATE DATABASE forum_db
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
 ```
-执行项目根目录 sql/ 下的 forum_db.sql，初始化表结构及必要的基础数据。
 
-### 后端启动
+随后执行：
 
-2. 将 `backend/src/main/resources/application.yaml.example` 复制为 `application.yaml`。
-3. 修改 `application.yaml` 中的 MySQL、Redis、邮箱等配置。
-4. 启动 MySQL 和 Redis。
-5. 进入后端目录启动服务：
+```text
+sql/forum_db.sql
+```
+
+如果从旧版数据库升级帖子正文类型，再根据实际数据库状态执行：
+
+```text
+sql/alter_posts_content_to_mediumtext.sql
+```
+
+### 2. 配置后端
+
+将示例配置复制为本地配置文件：
+
+```text
+backend/src/main/resources/application.yaml.example
+→ backend/src/main/resources/application.yaml
+```
+
+填写以下本地配置：
+
+- MySQL 用户名和密码
+- Redis 地址和端口
+- 邮箱 SMTP 账号与授权码
+- 文件上传目录
+
+不要把包含真实凭据的 `application.yaml` 提交到仓库。
+
+### 3. 启动后端
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
-### 前端启动
+
+### 4. 启动前端
 
 ```bash
 cd frontend
@@ -137,105 +250,70 @@ npm install
 npm run dev
 ```
 
-启动后访问终端输出的 Vite 本地地址(http://localhost:5173)。
+前端开发服务器会将 `/api` 请求代理到本地后端。实际访问地址以 Vite 终端输出为准，通常为 `http://localhost:5173`。
 
-------
+## 主要接口
 
-## 📑 API 接口预览
+| 模块 | 方法 | 路径 | 说明 |
+| --- | --- | --- | --- |
+| 用户 | `POST` | `/users` | 用户注册 |
+| 用户 | `POST` | `/session` | 用户登录 |
+| 用户 | `PUT` | `/password` | 重置密码 |
+| 社区 | `GET/POST` | `/boards` | 社区广场 / 创建社区 |
+| 社区 | `GET` | `/boards/{id}` | 社区详情 |
+| 社区 | `PUT` | `/board/membership` | 加入或退出社区 |
+| 帖子 | `GET/POST` | `/posts` | 帖子列表 / 发布帖子 |
+| 帖子 | `GET` | `/posts/search` | 搜索帖子 |
+| 帖子 | `GET` | `/post/{id}` | 帖子详情 |
+| 评论 | `GET` | `/post-comments` | 获取帖子评论 |
+| 评论 | `POST` | `/comments` | 发布评论 |
+| 评分 | `PUT` | `/ratings` | 切换点赞/点踩状态 |
+| 消息 | `GET` | `/messages` | 消息列表 |
+| 消息 | `GET` | `/message/unread-count` | 未读消息数 |
 
-| **模块** | **路由**         | **方法** | **功能描述**                     |
-| -------- | ---------------- | -------- | -------------------------------- |
-| **用户** | `/users`         | `POST`   | 用户注册                         |
-|          | `/session`       | `POST`   | 用户登录（获取 JWT 及个人信息）  |
-|          | `/email`         | `GET`    | 校验邮箱可用性/是否已注册        |
-|          | `/code`          | `GET`    | 校验邮箱验证码准确性             |
-|          | `/password`      | `PUT`    | 重置用户密码                 |
-|          | `/info`          | `PUT`    | 更新用户资料（如昵称等）         |
-|          | `/user/avatar`   | `POST`   | 上传/更新个人头像                |
-| **社区** | `/boards`        | `POST`   | 创建新社区                       |
-|          | `/boards`        | `GET`    | 获取社区广场列表                 |
-|          | `/boards/mine`   | `GET`    | 获取我加入/创建的社区            |
-|          | `/board/{id}`    | `GET`    | 获取特定社区详情                 |
-|          | `/board/search`  | `GET`    | 根据关键字搜索社区               |
-|          | `/board/cover`   | `POST`   | 上传/更换社区封面图              |
-|          | `/boards/history`   | `GET`   |  **获取最近浏览的社区**(5条之内)        |
-|          | `/boards/history`   | `DELETE`   | **删除最近浏览的社区记录**         |
-| **帖子** | `/posts`         | `POST`   | 在指定社区下发布新帖子      |
-|          | `/posts`         | `GET`    | 分页获取帖子列表（支持可选认证） |
-|          | `/post/{id}`     | `GET`    | 获取帖子正文及详细信息           |
-|          | `/posts`         | `DELETE` | 逻辑删除帖子                 |
-|          | `/posts`         | `PATCH`  | 恢复已删除的帖子             |
-|		   | `/posts/history` | `GET`    | **获取最近浏览的帖子**(9条之内) |
-|		   | `/posts/history` | `DELETE`    | **删除最近浏览的帖子记录** |
-| **评论** | `/post-comments` | `GET`    | 分页获取指定帖子下的评论列表     |
-|          | `/comments`      | `POST`   | 发表新评论                       |
-|          | `/comments`      | `DELETE` | 逻辑删除评论                 |
-|          | `/comments`      | `PATCH`  | 恢复已删除的评论         |
-| **评分** | `/ratings`       | `PUT`    | Toggle 机制：切换点赞/踩状态 |
-| **消息**|`/message/unread-count`|`GET`   |获取用户**未读**消息数|
-||`/messages`|`GET`|获取用户全部消息| 
-
-
-
-## 🛡️ 安全性说明
-
-1. **密码存储**：使用 `jBCrypt` 进行高强度加盐哈希存储，防止拖库。
-2. **身份令牌**：采用 `JWT` 机制，配合 `ThreadLocal` 在 `UserContext` 中管理用户态。
-3. **参数校验**：全量使用 `Jakarta Validation` 对 Controller 输入进行严格拦截。
-4. **会话持久化**：使用 `Spring Session Redis` 实现分布式环境下会话的一致性。
-
-## 🚧 待办事项 (Roadmap)
-
-- **权限加固 (Security)**：基于 `Interceptor` 实现管理员/用户角色校验，保护逻辑删除等敏感接口。
-- **缓存进阶 (Redis)**：利用 Redis 实现“热门帖子排行”与“用户最近浏览足迹”，提升响应速度。(初步完成)
-- **异步解耦 (Spring Event)**：利用异步事件处理评论、点赞后的“站内信”通知，优化发帖性能。(初步完成)
-- **SQL 调优 (Optimization)**：针对核心业务表建立复合索引，优化 `LIKE` 查询与大分页查询效率。
-- **工程交付 (DevOps)**：完善数据库初始化脚本与项目部署手册，提升项目交付标准。(与时俱进)
+完整路由及参数请以 `backend/src/main/java/sim/forum/controller` 下的 Controller 为准。
 
 ## 项目截图
 
-### 新用户注册
+### 注册与登录
 
-注册页面集中展示用户名、密码确认和邮箱设置流程，并通过醒目的提交按钮引导用户完成账号创建。
+| 注册 | 登录 |
+| --- | --- |
+| ![注册页面](docs/images/register.png) | ![登录页面](docs/images/login.png) |
 
-![新用户注册页面](docs/images/register.png)
+### 帖子互动与消息通知
 
-### 用户登录
-
-登录页面采用居中的表单卡片布局，提供账号、密码输入、密码可见性切换，以及注册和找回密码入口，便于用户快速完成身份验证。
-
-![用户登录页面](docs/images/login.png)
-
-### 帖子详情、评论互动与消息通知
-
-该 GIF 展示了用户从首页进入帖子详情页后，查看帖子内容并进行点赞、评论、分享等互动的流程。评论发布成功后，系统会同步更新评论数量，并在评论区展示评论内容及回复等操作入口。返回首页后，帖子互动数据和顶部未读消息会同步更新，用户可在消息中心查看「回复我的」和「收到的赞」通知。
-
-![首页帖子列表](docs/images/post_detail_with_message.gif)
+![帖子详情、评论互动与消息通知](docs/images/post_detail_with_message.gif)
 
 ### 最近浏览
 
-最近浏览模块同时出现在左侧社区列表和右侧帖子摘要中，方便用户快速回到近期访问过的社区与帖子。
-
 ![最近浏览模块](docs/images/user_recent_browse.png)
 
-### 创建社区 - 选择类型
+### 社区创建
 
-创建社区流程提供公开、私密和严格三种社区类型选项，用于补充社区创建时的基础信息。页面通过说明文案展示不同类型的设计含义，帮助用户完成创建前的配置选择。![创建社区选择类型](docs/images/board_create-choose_type.png)
+| 选择社区类型 | 填写社区信息 |
+| --- | --- |
+| ![选择社区类型](docs/images/board_create-choose_type.png) | ![填写社区信息](docs/images/board_create-detailed_info.png) |
 
-### 创建社区 - 填写详情
+### 发布帖子与个人资料
 
-社区详情步骤支持上传社区封面，并填写社区名称与描述，帮助管理员在创建前完成基础信息配置。
+| 发布帖子 | 个人资料 |
+| --- | --- |
+| ![发布帖子](docs/images/create_post.png) | ![个人资料](docs/images/user_self_info.png) |
 
-![创建社区填写详情](docs/images/board_create-detailed_info.png)
+## 当前边界
 
-### 发布帖子
+- 当前为前后端分离的单体应用，不是微服务系统。
+- 性能数据来自本地 JMeter 对比测试，不代表生产环境容量。
+- Redis 列表缓存测试主要覆盖缓存命中路径，尚不能代表缓存失效或更高并发下的表现。
+- 文件资源保存在本地文件系统，未接入对象存储。
+- 项目未实现消息队列、Redis Cluster、分布式事务或 Kubernetes 部署。
 
-发布帖子弹窗支持选择目标社区、填写标题与正文内容，用户可在当前页面内快速完成发帖操作。
+## 相关文档
 
-![发布帖子弹窗](docs/images/create_post.png)
+- [项目概览](docs/project.md)
+- [架构说明](docs/architecture.md)
+- [帖子列表性能测试报告](docs/pressure-test/posts/final.md)
+- [HOT 排序设计](docs/design/hot-post-sort.md)
+- [帖子搜索设计](docs/design/search.md)
 
-### 个人资料
-
-个人资料页展示用户封面、头像、昵称和邮箱信息，并提供编辑资料、退出登录以及发帖总数、注册时间、最后登录等账户概览数据。
-
-![个人资料页面](docs/images/user_self_info.png)
